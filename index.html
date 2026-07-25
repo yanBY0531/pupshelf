@@ -1,0 +1,4290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>小狗读书 🐾</title>
+
+<!-- ===== PWA 相关：manifest / 图标 / iOS专属标签 ===== -->
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="小狗读书">
+<meta name="theme-color" content="#faf6ee">
+
+<style>
+
+  :root{
+    --ink: #2b2620;
+    --ink-soft: #6b6155;
+    --paper: #faf6ee;
+    --paper-raised: #ffffff;
+    --line: #e3dbc9;
+    --accent: #a8483a;
+    --accent-btn: var(--accent); /* 按钮专用背景色，默认等于accent；仅夜读主题里单独指向深灰，其余不受影响 */
+    --accent-soft: #f0ddd6;
+    --banner-bg-1: var(--accent-soft);
+    --banner-bg-2: var(--paper-raised);
+    --banner-border: var(--accent-soft);
+    --gold: #b08d4f;
+    --shadow: 0 2px 12px rgba(43,38,32,0.06);
+    --note-bg: #f4ede0; /* 章节批注/心之角 这类小卡片的底色，原为硬编码 #f4ede0 / #fdf6f2，统一成一个变量 */
+    /* 与妻书 信件模块：原本是独立于全站主色的固定配色，现改造成变量，三套新主题各配一版协调色，原声主题数值与原硬编码完全一致 */
+    --letter-meta: #8a7f68;
+    --letter-meta-soft: #b5ab93;
+    --letter-body-text: #3d372c;
+    --letter-dot-dad: #a8483a;
+    --letter-dot-user: #5c7a8a;
+    --letter-compose-border: #b9c9d1;
+    --letter-compose-bg: #fffdf8;
+    --letter-submit-bg: #5c7a8a;
+    --letter-card-bg-1: #fdfbf6;
+    --letter-card-bg-2: #faf7ef;
+    --letter-card-border: #e6ddc8;
+    --letter-dash: #ddd2b8;
+    /* 悬浮窗（聊天弹层）玻璃拟态：原本整片硬编码米黄半透明，未跟随主题，是深色/雪/鲸蓝主题下文字发糊看不清的根源 */
+    --chat-sheet-bg: rgba(250,246,238,0.72);
+    --chat-sheet-blur: 24px;
+    --chat-sheet-border: rgba(227,219,201,0.5);
+    --chat-sheet-footer-bg: rgba(250,246,238,0.5);
+    --chat-input-bg: rgba(255,255,255,0.55);
+    --chat-input-border: rgba(255,255,255,0.7);
+    --chat-bubble-ai-bg: rgba(255,255,255,0.55);
+    --chat-bubble-ai-border: rgba(255,255,255,0.7);
+    --chat-bubble-ai-text: var(--ink);
+    --chat-bubble-me-bg: rgba(168,72,58,0.72);
+    --chat-bubble-me-text: #fff;
+    --note-accent: var(--gold);
+    --topbar-bg: rgba(250,246,238,0.92);
+    --accent-deep: #7c2f24;
+    --spine-bg: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    --spine-border: none;
+    --spine-line: rgba(255,255,255,0.35);
+    --spine-shadow: inset -3px 0 6px rgba(0,0,0,0.15);
+    --slider-thumb-bg: var(--accent-btn);
+    --slider-thumb-border: #fff;
+    --cot-bg: rgba(255,255,255,0.4);
+    --cot-border: rgba(255,255,255,0.6);
+    --btn-fill-bg: var(--accent-soft);
+    --btn-fill-text: var(--accent-btn);
+  }
+  [data-theme="dark"]{
+    --ink: #e8e2d6;
+    --ink-soft: #a89e8c;
+    --paper: #1c1a17;
+    --paper-raised: #2a2621;
+    --line: #3d372c;
+    --accent: #c9a862;
+    --accent-btn: #4a4640;
+    --accent-soft: #3d2c26;
+    --banner-bg-1: var(--accent-soft);
+    --banner-bg-2: var(--paper-raised);
+    --banner-border: var(--accent-soft);
+    --gold: #c9a862;
+    --shadow: 0 2px 12px rgba(0,0,0,0.35);
+    --note-bg: #2e2924;
+    --letter-meta: #a89e8c;
+    --letter-meta-soft: #6b6155;
+    --letter-body-text: #e8e2d6;
+    --letter-dot-dad: var(--accent);
+    --letter-dot-user: #7a9aac;
+    --letter-compose-border: #46525a;
+    --letter-compose-bg: #22201c;
+    --letter-submit-bg: #4a6875;
+    --letter-card-bg-1: #241f19;
+    --letter-card-bg-2: #201c17;
+    --letter-card-border: #3d372c;
+    --letter-dash: #4a4235;
+    /* 悬浮窗：低饱和黑灰调，AI气泡用比背景稍亮的深灰半透明，确保浅色文字读得清（原硬编码的暖白背景是发糊的根源） */
+    --chat-sheet-bg: rgba(28,26,23,0.82);
+    --chat-sheet-blur: 20px;
+    --chat-sheet-border: rgba(61,55,44,0.6);
+    --chat-sheet-footer-bg: rgba(24,22,19,0.7);
+    --chat-input-bg: rgba(255,255,255,0.06);
+    --chat-input-border: rgba(255,255,255,0.14);
+    --chat-bubble-ai-bg: rgba(255,255,255,0.09);
+    --chat-bubble-ai-border: rgba(255,255,255,0.12);
+    --chat-bubble-ai-text: #e8e2d6;
+    --chat-bubble-me-bg: rgba(70,66,60,0.85);
+    --chat-bubble-me-text: #e8e2d6;
+    --note-accent: var(--gold);
+    --topbar-bg: rgba(28,26,23,0.9);
+    --accent-deep: #8a4a35;
+    --spine-bg: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    --spine-border: none;
+    --spine-line: rgba(255,255,255,0.2);
+    --spine-shadow: inset -3px 0 6px rgba(0,0,0,0.25);
+    --slider-thumb-bg: var(--accent-btn);
+    --slider-thumb-border: #f0e6d8;
+    --cot-bg: rgba(255,255,255,0.4);
+    --cot-border: rgba(255,255,255,0.6);
+    --btn-fill-bg: var(--accent-soft);
+    --btn-fill-text: var(--accent-btn);
+  }
+
+  /* ===== 雪白 ===== */
+  [data-theme="snow"]{
+    --ink: #2e3a44;
+    --ink-soft: #7c8a94;
+    --paper: #f7fafc;
+    --paper-raised: #ffffff;
+    --line: #e2eaef;
+    --accent: #3d8bd4;
+    --accent-btn: var(--accent);
+    --accent-soft: #e2edf4;
+    --banner-bg-1: #ffffff;
+    --banner-bg-2: #f7fafc;
+    --banner-border: #dde8f0;
+    --gold: #a8bdd4;
+    --shadow: 0 2px 10px rgba(60,90,110,0.05);
+    --note-bg: #eef4f8;
+    --letter-meta: #8a9aa5;
+    --letter-meta-soft: #b7c5cd;
+    --letter-body-text: #2e3a44;
+    --letter-dot-dad: #b0a48f;
+    --letter-dot-user: #7a8a99;
+    --letter-compose-border: #dde3e7;
+    --letter-compose-bg: #ffffff;
+    --letter-submit-bg: #7a8a99;
+    --letter-card-bg-1: #ffffff;
+    --letter-card-bg-2: #fbfcfd;
+    --letter-card-border: #e6eaed;
+    --letter-dash: #dde3e7;
+    /* 悬浮窗：高模糊度毛玻璃，透出书页底色的"积雪轻盈感"，冷色调，文字深蓝近黑而非纯黑 */
+    --chat-sheet-bg: rgba(255,255,255,0.45);
+    --chat-sheet-blur: 32px;
+    --chat-sheet-border: rgba(200,214,224,0.55);
+    --chat-sheet-footer-bg: rgba(255,255,255,0.35);
+    --chat-input-bg: rgba(255,255,255,0.5);
+    --chat-input-border: rgba(200,214,224,0.6);
+    --chat-bubble-ai-bg: rgba(255,255,255,0.5);
+    --chat-bubble-ai-border: rgba(210,222,230,0.65);
+    --chat-bubble-ai-text: #1e2a38;
+    --chat-bubble-me-bg: rgba(122,138,153,0.55);
+    --chat-bubble-me-text: #fff;
+    --note-accent: #4a6b85; /* 低饱和深蓝，专用于"小狗看这里"批注竖杠，脱钩于--gold */
+    --topbar-bg: rgba(247,250,252,0.85);
+    --accent-deep: #35597a;
+    --spine-bg: var(--accent-soft);
+    --spine-border: 1px solid var(--accent-btn);
+    --spine-line: rgba(61,139,212,0.25);
+    --spine-shadow: none;
+    --slider-thumb-bg: #8fa8bd;
+    --slider-thumb-border: #ffffff;
+    --cot-bg: rgba(255,255,255,0.5);
+    --cot-border: rgba(255,255,255,0.7);
+    --btn-fill-bg: var(--accent-soft);
+    --btn-fill-text: var(--accent-btn);
+  }
+  [data-theme="whale"]{
+    --ink: #1c1e22;
+    --ink-soft: #5a5f68;
+    --paper: #c7cbd1;
+    --paper-raised: #f4f5f7;
+    --line: #a9aeb6;
+    --accent: #1a4fe0;
+    --accent-btn: #1a4fe0;
+    --accent-soft: #dbe3fa;
+    --banner-bg-1: #dbe3fa;
+    --banner-bg-2: #eef1fb;
+    --banner-border: #1a4fe0;
+    --gold: #6b7280;
+    --shadow: 0 2px 12px rgba(30,35,45,0.18);
+    --note-bg: #d6dae1;
+    --letter-meta: #5a5f68;
+    --letter-meta-soft: #7c818a;
+    --letter-body-text: #1c1e22;
+    --letter-dot-dad: #1a4fe0;
+    --letter-dot-user: #4a5568;
+    --letter-compose-border: #a9aeb6;
+    --letter-compose-bg: #f4f5f7;
+    --letter-submit-bg: #1a4fe0;
+    --letter-card-bg-1: #f4f5f7;
+    --letter-card-bg-2: #e8eaed;
+    --letter-card-border: #a9aeb6;
+    --letter-dash: #a9aeb6;
+    /* 悬浮窗：中灰底上叠一层更浅的灰白卡片，靠亮度差分出边界，不再靠深色衬托蓝色 */
+    --chat-sheet-bg: rgba(224,226,230,0.88);
+    --chat-sheet-blur: 20px;
+    --chat-sheet-border: rgba(169,174,182,0.5);
+    --chat-sheet-footer-bg: rgba(224,226,230,0.7);
+    --chat-input-bg: rgba(255,255,255,0.75);
+    --chat-input-border: rgba(169,174,182,0.6);
+    --chat-bubble-ai-bg: rgba(255,255,255,0.75);
+    --chat-bubble-ai-border: rgba(169,174,182,0.5);
+    --chat-bubble-ai-text: #1c1e22;
+    --chat-bubble-me-bg: rgba(26,79,224,0.9);
+    --chat-bubble-me-text: #fff;
+    --note-accent: var(--gold);
+    --topbar-bg: rgba(199,203,209,0.92);
+    --accent-deep: #0f2f8a;
+    --spine-bg: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    --spine-border: none;
+    --spine-line: rgba(255,255,255,0.3);
+    --spine-shadow: inset -3px 0 6px rgba(0,0,0,0.2);
+    --slider-thumb-bg: var(--accent-btn);
+    --slider-thumb-border: #fff;
+    /* CoT折叠框：跟chat-sheet同色系，比chat-sheet背景略浅一点点，融入整体而不是跳出来 */
+    --cot-bg: rgba(244,245,247,0.65);
+    --cot-border: rgba(169,174,182,0.4);
+    --btn-fill-bg: var(--accent);
+    --btn-fill-text: #ffffff;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent; }
+
+  html,body{ height:100%; }
+
+  body{
+    font-family: 'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* subtle paper texture */
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    pointer-events:none;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(160,130,80,0.04), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(160,60,40,0.03), transparent 45%);
+    z-index:0;
+  }
+
+  #app{ position:relative; z-index:1; min-height:100vh; }
+
+  .view{ display:none; min-height:100vh; }
+  .view.active{ display:block; }
+
+  /* 阅读页自定义背景：背景图固定锚定在屏幕上（不是锚定在会随内容变高的阅读页容器上），
+     所以文字滚动时背景图纹丝不动，也不会被离谱拉伸——这是之前的bug根源：之前用inset:0相对阅读页容器铺满，
+     阅读页高度会随文章长度变化，背景图就被硬拉伸到跟文章一样高 */
+  #view-reader{ position:relative; }
+  #readerBgImage{
+    position:fixed; inset:0; z-index:0;
+    background-size:contain; background-position:center top; background-repeat:no-repeat;
+    background-color: var(--paper);
+    display:none;
+  }
+  #readerBgOverlay{
+    position:fixed; inset:0; z-index:0;
+    background: var(--paper);
+    display:none;
+  }
+  #view-reader.has-bg #readerBgImage,
+  #view-reader.has-bg #readerBgOverlay{ display:block; }
+  #view-reader .topbar, #view-reader .reader-body{ position:relative; z-index:1; }
+
+  /* ---------- 顶部栏 ---------- */
+  .topbar{
+    position: sticky; top:0; z-index:10;
+    display:flex; align-items:center; gap:12px;
+    padding: 16px 20px;
+    background: var(--topbar-bg);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .back{
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--paper-raised); border:1px solid var(--line);
+    color: var(--ink); cursor:pointer; flex-shrink:0;
+    font-size:16px;
+  }
+  .topbar .regen-chapter{
+    width:34px; height:34px; border-radius:50%;
+    display:none; align-items:center; justify-content:center;
+    background: var(--paper-raised); border:1px solid var(--line);
+    color: var(--ink-soft); cursor:pointer; flex-shrink:0;
+    font-size:15px;
+  }
+  .topbar .regen-chapter.show{ display:flex; }
+  .topbar h1{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 18px; font-weight:600;
+    flex:1;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .topbar .sub{ font-size:12px; color:var(--ink-soft); }
+
+  /* ---------- 书架 ---------- */
+  .shelf-header{
+    padding: 36px 24px 20px;
+    text-align:center;
+  }
+  .shelf-header .mark{
+    display:inline-block; width:28px; height:2px; background:var(--accent);
+    margin-bottom:14px;
+  }
+  .shelf-header h1{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 26px; font-weight:700; letter-spacing:0.5px;
+    margin-bottom:6px;
+  }
+  .shelf-header p{ font-size:13px; color:var(--ink-soft); }
+
+  .home-menu{
+    padding: 10px 24px 30px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .home-menu-item{
+    display:flex; align-items:center; gap:14px;
+    padding: 18px 18px; border-radius:16px;
+    background: var(--paper-raised); border:1px solid var(--line);
+    cursor:pointer;
+  }
+  .home-menu-item .hm-icon{ font-size:24px; flex-shrink:0; }
+  .home-menu-item .hm-title{ font-size:15px; font-weight:600; color: var(--ink); font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; }
+  .home-menu-item .hm-sub{ font-size:12px; color: var(--ink-soft); margin-top:2px; }
+
+  .shelf-list{
+    padding: 4px 20px 100px;
+    display:flex; flex-direction:column; gap:12px;
+  }
+
+  .book-card{
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    display:flex; gap:14px; align-items:center;
+    box-shadow: var(--shadow);
+    cursor:pointer;
+    transition: transform .15s ease;
+  }
+  .book-card:active{ transform: scale(0.98); }
+
+  .book-spine{
+    width:44px; height:60px; flex-shrink:0;
+    border-radius:4px;
+    background: var(--spine-bg);
+    border: var(--spine-border, none);
+    position:relative;
+    box-shadow: var(--spine-shadow);
+    box-sizing: border-box;
+  }
+  .book-spine::after{
+    content:"";
+    position:absolute; left:6px; top:8px; bottom:8px; width:1px;
+    background: var(--spine-line);
+  }
+
+  .book-info{ flex:1; min-width:0; }
+  .book-info .title{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size:16px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .book-info .meta{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .book-info .progress-bar{
+    margin-top:10px; height:4px; border-radius:2px;
+    background: var(--line); overflow:hidden;
+  }
+  .book-info .progress-fill{
+    height:100%; background: var(--gold); border-radius:2px;
+  }
+
+  .empty-state{
+    text-align:center; padding: 60px 30px;
+    color: var(--ink-soft); font-size:13px; line-height:1.8;
+  }
+  .empty-state .icon{ font-size:32px; margin-bottom:12px; opacity:0.5; }
+
+  /* ---------- 悬浮上传按钮 ---------- */
+  .fab{
+    position: fixed; right:22px; bottom:28px; z-index:20;
+    width:56px; height:56px; border-radius:50%;
+    background: var(--btn-fill-bg); color: var(--btn-fill-text);
+    border: 1px solid var(--accent-btn);
+    backdrop-filter: blur(14px) saturate(1.6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:300;
+    box-shadow: 0 6px 18px rgba(168,72,58,0.35);
+    border:none; cursor:pointer;
+  }
+  .fab:active{ transform: scale(0.94); }
+
+  #fileInput{ display:none; }
+
+  /* ---------- 目录页 ---------- */
+  .toc-list{ padding: 10px 16px 100px; }
+  .toc-item{
+    display:flex; align-items:center; gap:12px;
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--line);
+    cursor:pointer;
+  }
+  .toc-item:active{ background: rgba(160,130,80,0.06); }
+  .toc-num{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size:13px; color: var(--ink-soft);
+    width:34px; flex-shrink:0; text-align:center;
+  }
+  .toc-title{ flex:1; font-size:14.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .toc-status{
+    font-size:11px; padding:3px 9px; border-radius:20px; flex-shrink:0;
+  }
+  .status-unread{ color: var(--ink-soft); background: var(--line); }
+  .status-annotated{ color: var(--gold); background: transparent; border:1px solid var(--gold); }
+
+  /* ---------- 批次选择条 ---------- */
+  .batch-bar{
+    margin: 14px 16px; padding: 16px;
+    background: var(--paper-raised); border:1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow);
+  }
+  .batch-bar .label{
+    font-size:12.5px; color: var(--ink-soft); margin-bottom:10px;
+    display:flex; justify-content:space-between;
+  }
+  .batch-bar .label b{ color: var(--ink); font-weight:600; }
+  input[type=range]{
+    width:100%; height:4px; -webkit-appearance:none; appearance:none;
+    background: var(--line); border-radius:2px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background: var(--slider-thumb-bg); border:3px solid var(--slider-thumb-border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25); cursor:pointer;
+  }
+  .batch-range-labels{ display:flex; justify-content:space-between; font-size:11px; color:var(--ink-soft); margin-top:6px; }
+  .batch-btn{
+    margin-top:14px; width:100%; padding: 13px;
+    background: var(--btn-fill-bg); color: var(--btn-fill-text); border:1px solid var(--accent-btn); border-radius:10px;
+    font-size:14px; font-weight:600; letter-spacing:0.5px;
+    cursor:pointer;
+  }
+  .batch-btn:disabled{ background: var(--line); color: var(--ink-soft); }
+
+  /* 鲸蓝主题「来吧」按钮：蓝宝石玻璃质感——纯色打底，靠两条极细内描边线体现材质厚度，不用渐变、外边框和外发光 */
+  [data-theme="whale"] .batch-btn{
+    background: #2f52d4;
+    border: none;
+    box-shadow:
+      inset 0 0.5px 0 rgba(255,255,255,0.35),
+      inset 0 -1px 0 rgba(10,18,50,0.3),
+      0 1px 2px rgba(20,30,70,0.18);
+  }
+
+  /* ---------- 阅读页 ---------- */
+  .reader-body{ padding: 24px 22px 120px; max-width: 640px; margin:0 auto; }
+  .chapter-block{ margin-bottom: 44px; }
+  .chapter-block h2{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 19px; font-weight:700;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .para{
+    font-size: 15.5px; line-height: 1.95;
+    color: var(--ink);
+    margin-bottom: 16px;
+    font-family: 'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    position: relative;
+    padding-left: 4px;
+  }
+  .para .pnum{
+    font-size:10.5px; color: var(--ink-soft); opacity:0.55;
+    font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
+    vertical-align: super; margin-right:3px;
+    transition: opacity .15s;
+  }
+  .para:active .pnum, .para.marked .pnum{ opacity:1; }
+  .para.marked{ background: var(--accent-soft); border-radius:4px; padding:4px; margin: 0 -4px 16px; }
+
+  .annotation-block{
+    margin-top: 10px; padding: 14px 16px;
+    background: var(--note-bg); border-left: 3px solid var(--note-accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px; color: var(--ink); line-height:1.85;
+  }
+  .annotation-block .tag{
+    font-size:11px; color: var(--note-accent); font-weight:600; margin-bottom:6px;
+    letter-spacing:0.5px;
+  }
+  .annotation-placeholder{
+    margin-top: 10px; padding: 14px 16px;
+    background: var(--note-bg); border-left: 3px solid var(--note-accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px; color: var(--ink-soft); line-height:1.8;
+    font-style: italic;
+  }
+  .chapter-heart{
+    margin-top: 18px; padding: 16px 18px;
+    background: var(--paper-raised); border:1px solid var(--line);
+    border-radius: 12px; box-shadow: var(--shadow);
+    font-size: 14px; line-height:1.9; color: var(--ink);
+  }
+  .chapter-heart .tag{
+    font-size:11px; color: var(--accent); font-weight:600; margin-bottom:8px;
+    letter-spacing:0.5px;
+  }
+
+  /* ---------- 章节导航（上一章/下一章）---------- */
+  .chapter-nav{
+    display:flex; gap:10px; margin-top:28px;
+  }
+  .chapter-nav-btn{
+    flex:1; padding:13px 10px; border-radius:10px;
+    background: var(--paper-raised); border:1px solid var(--line);
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-size:13.5px; color: var(--ink);
+    text-align:center; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+  }
+  .chapter-nav-btn .cn-label{ font-size:10.5px; color: var(--ink-soft); }
+  .chapter-nav-btn:disabled, .chapter-nav-btn.disabled{
+    opacity:0.4; cursor:default;
+  }
+
+  /* ---------- 悬浮球 ---------- */
+  .float-ball{
+    position: fixed; right:20px; bottom:26px; z-index:30;
+    width:54px; height:54px; border-radius:50%;
+    background: linear-gradient(135deg, var(--gold), var(--accent));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 6px 20px rgba(168,72,58,0.4);
+    cursor:pointer; border:none;
+  }
+  .float-ball span{ font-size:22px; }
+
+  /* ---------- 弹层通用 ---------- */
+  .sheet-overlay{
+    position: fixed; inset:0; background: rgba(43,38,32,0.4);
+    z-index:40; display:none;
+  }
+  .sheet-overlay.active{ display:block; }
+  .sheet{
+    position: fixed; left:0; right:0; bottom:0; z-index:41;
+    background: var(--paper); border-radius: 20px 20px 0 0;
+    max-height: 82vh; display:flex; flex-direction:column;
+    transform: translateY(100%); transition: transform .28s ease;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+  }
+  .sheet.active{ transform: translateY(0); }
+  .sheet-handle{ width:36px; height:4px; background:var(--line); border-radius:2px; margin:10px auto; }
+  .sheet-header{ padding: 4px 20px 14px; border-bottom:1px solid var(--line); font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; }
+  .sheet-body{ padding: 16px 20px; overflow-y:auto; flex:1; }
+  .sheet-footer{ padding: 12px 16px calc(env(safe-area-inset-bottom,0px) + 12px); border-top:1px solid var(--line); }
+
+  /* 上传弹层 */
+  .upload-zone{
+    border: 2px dashed var(--line); border-radius:14px;
+    padding: 40px 20px; text-align:center; color:var(--ink-soft);
+    font-size:13px; line-height:1.8;
+  }
+  .upload-zone .icon{ font-size:30px; margin-bottom:10px; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px; }
+  .field input[type=text]{
+    width:100%; padding: 11px 13px; border:1px solid var(--line); border-radius:9px;
+    font-size:14px; background: var(--paper-raised); color:var(--ink);
+    font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
+  }
+  .primary-btn{
+    width:100%; padding:13px; background: var(--btn-fill-bg); color: var(--btn-fill-text); border:1px solid var(--accent-btn);
+    border-radius:10px; font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .primary-btn:disabled{ background: var(--line); color:var(--ink-soft); }
+  .ghost-btn{
+    width:100%; padding:13px; background:transparent; color: var(--ink-soft); border:1px solid var(--line);
+    border-radius:10px; font-size:13.5px; margin-top:10px; cursor:pointer;
+  }
+
+  /* 界面主题选择：每行一个色点 + 文字，选中态用 accent 描边区分 */
+  .theme-choice-row{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+    font-size:13.5px; color:var(--ink); cursor:pointer;
+    transition: border-color 0.15s;
+  }
+  .theme-choice-row:has(input:checked), .theme-choice-row.is-selected{ border-color: var(--accent); background: var(--accent-soft); }
+  .theme-choice-row input[type="radio"]{ margin:0; accent-color: var(--accent); }
+  .theme-swatch{
+    width:16px; height:16px; border-radius:50%; flex-shrink:0;
+    border:1px solid rgba(0,0,0,0.1);
+  }
+
+  /* 对话窗口：玻璃拟态风格 */
+  .chat-msg{ margin-bottom:16px; display:flex; flex-direction:column; }
+  .chat-msg.me{ align-items:flex-end; }
+  .chat-msg.ai{ align-items:flex-start; }
+  .chat-header{
+    display:flex; align-items:center; gap:6px;
+    margin-bottom:5px; padding:0 4px;
+  }
+  .chat-msg.me .chat-header{ flex-direction:row-reverse; }
+  .chat-avatar{
+    width:22px; height:22px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; overflow:hidden;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.6);
+    backdrop-filter: blur(6px);
+  }
+  .chat-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .chat-name{ font-size:12.5px; color: var(--ink-soft); opacity:0.85; }
+  .chat-body-wrap{ max-width:86%; min-width:0; }
+  .chat-msg.ai .chat-body-wrap{ max-width:92%; }
+  .chat-bubble{
+    padding: 11px 14px; border-radius:16px;
+    font-size:14px; line-height:1.7;
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  }
+  .chat-msg.me .chat-bubble{
+    background: var(--chat-bubble-me-bg);
+    color: var(--chat-bubble-me-text); border-bottom-right-radius:5px;
+    box-shadow: 0 2px 10px rgba(168,72,58,0.18);
+  }
+  .chat-msg.ai .chat-bubble{
+    background: var(--chat-bubble-ai-bg);
+    border:1px solid var(--chat-bubble-ai-border);
+    color: var(--chat-bubble-ai-text); border-bottom-left-radius:5px;
+    box-shadow: 0 2px 10px rgba(43,38,32,0.06);
+  }
+  .chat-meta{
+    font-size:10px; color: var(--ink-soft); opacity:0.55;
+    margin-top:4px; padding:0 4px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .chat-msg.me .chat-meta{ justify-content:flex-end; }
+  .chat-cache-hit{ opacity:0.8; }
+  .chat-locator{ font-size:10.5px; opacity:0.85; margin-bottom:4px; }
+
+  /* 聊天弹层整体的玻璃拟态背景，覆盖通用 .sheet 的实色背景 */
+  #chatSheet{
+    background: var(--chat-sheet-bg);
+    backdrop-filter: blur(var(--chat-sheet-blur)) saturate(1.5);
+    -webkit-backdrop-filter: blur(var(--chat-sheet-blur)) saturate(1.5);
+  }
+  #chatSheet .sheet-header{ border-bottom: 1px solid var(--chat-sheet-border); background: transparent; }
+  #chatSheet .sheet-footer{ border-top: 1px solid var(--chat-sheet-border); background: var(--chat-sheet-footer-bg); }
+  #chatOverlay.active ~ #chatSheet, #chatSheet{ }
+  #chatSheet .chat-input-row textarea{
+    background: var(--chat-input-bg);
+    border: 1px solid var(--chat-input-border);
+    backdrop-filter: blur(10px);
+  }
+
+  .chat-input-row{ display:flex; gap:8px; align-items:flex-end; }
+  .chat-input-row textarea{
+    flex:1; resize:none; border:1px solid var(--line); border-radius:12px;
+    padding: 11px 13px; font-size:14px; font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
+    max-height:100px; background:var(--paper-raised); color:var(--ink);
+  }
+  .send-btn{
+    width:42px; height:42px; border-radius:50%;
+    background: var(--btn-fill-bg); color: var(--btn-fill-text);
+    border: 1px solid var(--accent-btn);
+    backdrop-filter: blur(10px) saturate(1.6);
+    -webkit-backdrop-filter: blur(10px) saturate(1.6);
+    flex-shrink:0; font-size:16px; cursor:pointer;
+  }
+  .send-btn:disabled{ background:var(--line); }
+
+  .summary-btn{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background: rgba(255,255,255,0.6); border:1px solid var(--line);
+    font-size:14px; cursor:pointer; color: var(--ink-soft);
+  }
+  .summary-btn:disabled{ opacity:0.5; }
+  #btnToggleCot.cot-on{
+    background: linear-gradient(135deg, #fff9e8 0%, #f4e6c8 45%, #e8d9ae 100%);
+    border-color: rgba(232,217,174,0.9);
+    box-shadow: 0 0 8px rgba(244,230,200,0.6);
+  }
+
+  /* 深度思考(CoT)展示框：可折叠，默认收起。样式先行定义，功能逻辑留待"深度思考+流式输出"专题开发 */
+  .cot-box{
+    margin-bottom:8px; border-radius:14px;
+    background: var(--cot-bg);
+    border:1px solid var(--cot-border);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    overflow:hidden;
+  }
+  .cot-summary{
+    display:flex; align-items:center; gap:7px;
+    padding:9px 13px; cursor:pointer; user-select:none;
+    font-size:12.5px; color: var(--ink-soft);
+  }
+  .cot-icon{
+    font-size:14px;
+    /* 白金色调：偏亮、带一点暖金光泽，非纯白非冷蓝 */
+    background: linear-gradient(135deg, #fff9e8 0%, #f4e6c8 45%, #e8d9ae 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 3px rgba(244,230,200,0.55));
+  }
+  .cot-summary .cot-caret{ margin-left:auto; font-size:10px; opacity:0.6; transition: transform .2s ease; }
+  .cot-box.open .cot-caret{ transform: rotate(180deg); }
+  .cot-content{
+    max-height:0; overflow:hidden; transition: max-height .25s ease;
+    padding:0 13px; font-size:12.5px; line-height:1.7; color: var(--ink-soft); opacity:0.85;
+  }
+  .cot-box.open .cot-content{ max-height:600px; padding:0 13px 12px; overflow-y:auto; }
+
+  /* 摘要草稿气泡：视觉上和普通聊天消息区分开，提醒这是"待确认"的内容 */
+  .summary-draft-bubble{ border:1.5px dashed var(--accent) !important; }
+  .summary-draft-actions{
+    display:flex; gap:8px; margin-top:8px; padding:0 4px;
+  }
+  .summary-draft-actions button{
+    padding:6px 14px; border-radius:20px; font-size:12.5px; cursor:pointer;
+  }
+  .summary-draft-actions .btn-accept{ background: var(--btn-fill-bg); color: var(--btn-fill-text); border:1px solid var(--accent-btn); }
+  .summary-draft-actions .btn-discard{ background: transparent; color: var(--ink-soft); border:1px solid var(--line); }
+  .summary-draft-saved{ font-size:11.5px; color: var(--accent); padding:0 4px; margin-top:6px; }
+
+  .locator-tag{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:11.5px; color: var(--accent); background: var(--accent-soft);
+    padding: 4px 10px; border-radius:20px; margin-bottom:8px;
+  }
+  .locator-tag button{ background:none; border:none; color:var(--accent); cursor:pointer; font-size:13px; line-height:1; }
+
+  /* 小狗日后谈（书摘展示） */
+  .bookmarks-tabs{
+    display:flex; gap:8px; padding: 6px 20px 16px;
+  }
+  .bookmarks-tab{
+    flex:1; text-align:center; padding:10px; border-radius:12px;
+    font-size:13px; color: var(--ink-soft); background: var(--paper-raised);
+    border:1px solid var(--line); cursor:pointer;
+  }
+  .bookmarks-tab.active{ background: var(--btn-fill-bg); color: var(--btn-fill-text); border-color: var(--accent-btn); }
+  .bookmark-card{
+    padding: 14px 16px; border-radius:14px; margin-bottom:12px;
+    background: var(--paper-raised); border:1px solid var(--line);
+  }
+  .bookmark-card .bm-text{ font-size:14px; line-height:1.75; color: var(--ink); margin-bottom:8px; }
+  .bookmark-card .bm-meta{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11px; color: var(--ink-soft); opacity:0.7;
+  }
+  .bookmarks-empty{ text-align:center; padding: 50px 20px; color: var(--ink-soft); font-size:13.5px; line-height:1.8; }
+
+  /* 与妻书：书信体互动 UI，配色跟随主题变量，保留偏冷偏纸感的独立气质 */
+  .letter-card{
+    background: linear-gradient(180deg, var(--letter-card-bg-1), var(--letter-card-bg-2));
+    border: 1px solid var(--letter-card-border);
+    border-radius: 10px;
+    padding: 22px 20px 18px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 14px rgba(80,70,50,0.06);
+  }
+  .letter-subtitle{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 12px; color:var(--letter-meta); opacity:0.75;
+    text-align:center; letter-spacing:0.5px;
+    margin-bottom: 18px; padding-bottom:14px;
+    border-bottom: 1px dashed var(--letter-dash);
+  }
+  .letter-meta{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 11px; color:var(--letter-meta-soft);
+    text-align:center; letter-spacing:0.5px;
+    margin-top: -10px; margin-bottom: 18px;
+  }
+  .letter-block{ margin-bottom: 18px; }
+  .letter-block:last-child{ margin-bottom: 0; }
+  .letter-name{
+    display:flex; align-items:center; gap:7px;
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 14.5px; font-weight:600; color:var(--letter-meta);
+    margin-bottom: 10px;
+  }
+  .letter-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--letter-dot-dad); flex-shrink:0;
+  }
+  .letter-block.user .letter-dot{ background:var(--letter-dot-user); }
+  .letter-body{
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    font-size: 14.5px; line-height: 2; color:var(--letter-body-text);
+    letter-spacing: 0.3px;
+    white-space: pre-wrap;
+    padding-left: 13px;
+  }
+  .letter-footer{
+    display:flex; justify-content:flex-end; align-items:baseline; gap:10px;
+    margin-top:10px; padding-right:2px;
+  }
+  .letter-footer .lf-date{ font-size:12px; color:var(--letter-meta); font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; }
+  .letter-footer .lf-tokens{ font-size:10px; color:var(--letter-meta-soft); }
+  .letter-divider{
+    border:none; border-top: 1px dashed var(--letter-dash); margin: 18px 0;
+  }
+  .letter-reply-row{ text-align:center; margin-top: 6px; }
+  .letter-reply-btn, .letter-retry-btn{
+    padding: 9px 22px; border-radius:20px; font-size:12.5px; cursor:pointer;
+    background: transparent; color:var(--accent); border:1px solid var(--accent);
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+  }
+  .letter-compose{ margin-top: 6px; }
+  .letter-compose textarea{
+    width:100%; min-height:90px; resize:vertical;
+    border:1px solid var(--letter-dash); border-radius:8px; padding:12px;
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-size:14px; line-height:1.8;
+    color:var(--letter-body-text); background:var(--letter-compose-bg);
+  }
+  .letter-compose .lc-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .letter-compose button{ padding:7px 16px; border-radius:16px; font-size:12.5px; cursor:pointer; }
+  .letter-compose .lc-cancel{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); }
+  .letter-compose .lc-submit{ background:var(--letter-submit-bg); border:none; color:#fff; }
+  .letter-loading{ text-align:center; font-size:12.5px; color:var(--letter-meta); padding:10px 0; }
+
+  .toast{
+    position:fixed; left:50%; top:20px; transform: translateX(-50%);
+    background: var(--ink); color:#fff; padding:10px 20px; border-radius:24px;
+    font-size:13px; z-index:100; opacity:0; pointer-events:none; transition: opacity .25s;
+  }
+  .toast.show{ opacity:0.95; }
+
+  .center-loading{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 60px 20px; color: var(--ink-soft); font-size:13px; gap:14px;
+  }
+  .spinner{
+    width:28px; height:28px; border-radius:50%;
+    border:3px solid var(--line); border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .settings-row{
+    padding:14px 0; border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+  }
+  .settings-row .rt{ font-size:12px; color:var(--ink-soft); }
+
+  /* ---------- 手动摘录：常驻悬浮按钮（不跟随选区，固定在阅读页右下角，避免和系统复制菜单打架） ---------- */
+  .select-bubble{
+    position: fixed; z-index:50;
+    right: 20px; bottom: 84px;
+    width: 50px; height: 50px; border-radius:50%;
+    background: var(--ink); color:#fff;
+    display:none; align-items:center; justify-content:center;
+    font-size:24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    cursor:pointer;
+    transform: scale(1);
+    transition: transform 0.15s;
+  }
+  .select-bubble.show{ display:flex; }
+  .select-bubble.active{
+    transform: scale(1.08);
+    box-shadow: 0 4px 20px rgba(168,72,58,0.45);
+  }
+
+  /* 自定义确认弹层（替代不可靠的浏览器原生 confirm()，部分手机内嵌浏览器会静默拦截原生弹窗） */
+  .confirm-overlay{
+    position: fixed; inset:0; z-index:60; display:none;
+    align-items:center; justify-content:center;
+    background: rgba(43,38,32,0.4); padding: 24px;
+  }
+  .confirm-overlay.active{ display:flex; }
+  /* confirmOverlay 专用于二次确认（如清空导入、删除书籍），必须永远盖在其他弹层（如导入预览）之上，
+     不能依赖DOM顺序决定层叠——否则在导入预览开着时点"清空后导入"，确认框可能被预览层挡住点不到 */
+  #confirmOverlay{ z-index:80; }
+  .confirm-card{
+    background: var(--paper); border-radius:16px;
+    max-width:340px; width:100%;
+    padding: 22px 20px 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+  .confirm-card .msg{
+    font-size:14px; line-height:1.7; color: var(--ink);
+    white-space: pre-wrap; margin-bottom:18px;
+  }
+  .confirm-card .btn-row{ display:flex; gap:10px; }
+  .confirm-card .btn-row button{
+    flex:1; padding:11px; border-radius:9px; font-size:13.5px;
+    cursor:pointer; border:1px solid var(--line);
+  }
+  .confirm-card .btn-cancel{ background: var(--paper-raised); color: var(--ink-soft); }
+  .confirm-card .btn-ok{ background: var(--btn-fill-bg); color: var(--btn-fill-text); border-color: var(--accent-btn); }
+
+  /* 导入预览：设置项/书本 勾选行 */
+  .import-item-label{
+    display:flex; align-items:flex-start; gap:8px;
+    padding:8px 0; border-bottom:1px solid var(--line);
+    font-size:12.5px; line-height:1.6; color: var(--ink);
+  }
+  .import-item-label:last-child{ border-bottom:none; }
+  .import-item-label input[type="checkbox"]{ margin-top:3px; flex-shrink:0; }
+  .import-item-title{ font-weight:600; margin-bottom:2px; }
+  .import-item-desc{ opacity:0.6; font-size:11.5px; white-space:pre-wrap; }
+  .import-section-heading{ font-size:12px; font-weight:600; color: var(--ink-soft); margin-bottom:6px; }
+
+  /* 全书读完横幅 */
+  .finished-banner{
+    margin: 0 20px 16px; padding: 16px 18px; border-radius:14px;
+    background: linear-gradient(135deg, var(--banner-bg-1), var(--banner-bg-2));
+    border: 1px solid var(--banner-border);
+  }
+  .finished-banner .fb-text{ font-size:13.5px; color: var(--ink); line-height:1.6; margin-bottom:10px; }
+  .finished-banner button{
+    padding: 9px 18px; border-radius:20px; font-size:13px; cursor:pointer;
+    background: var(--btn-fill-bg); color: var(--btn-fill-text); border:1px solid var(--accent-btn);
+  }
+  .finished-banner.done{
+    background: rgba(168,72,58,0.05); border-style:dashed;
+  }
+  .finished-banner.done button{ background: transparent; color: var(--accent); border:1px solid var(--accent); }
+
+  /* 终稿书评弹层内容 */
+  .final-review-stage-label{
+    font-size:11.5px; color: var(--accent); background: var(--accent-soft);
+    display:inline-block; padding:4px 10px; border-radius:20px; margin-bottom:12px;
+  }
+  .final-review-text{ font-size:14.5px; line-height:1.85; color: var(--ink); white-space:pre-wrap; }
+  .final-review-textarea{
+    width:100%; font-size:14.5px; line-height:1.85; color: var(--ink);
+    font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif;
+    border:1px solid var(--line); border-radius:9px; padding:12px;
+    background: var(--paper-raised); resize:vertical;
+  }
+  .final-review-loading{ font-size:13.5px; color: var(--ink-soft); text-align:center; padding: 30px 0; }
+  .final-review-footer-row{ display:flex; gap:10px; }
+  .final-review-footer-row button{
+    flex:1; padding:12px; border-radius:10px; font-size:13.5px; cursor:pointer; border:1px solid var(--line);
+  }
+  .final-review-footer-row .btn-accept{ background: var(--btn-fill-bg); color: var(--btn-fill-text); border:1px solid var(--accent-btn); }
+  .final-review-footer-row .btn-regen{ background: var(--paper-raised); color: var(--ink-soft); }
+</style>
+<script src="./js/jszip.min.js"></script></head>
+<body>
+
+<div id="app">
+
+  <!-- ========== 视图一：书架 ========== -->
+  <!-- ========== 视图零：首页 ========== -->
+  <div class="view active" id="view-home">
+    <div class="shelf-header">
+      <span class="mark"></span>
+      <h1>小狗读书 🐾</h1>
+      <p id="shelfSub">白色卷毛小狗24h高强度巡逻中😾🚨🚔</p>
+    </div>
+    <div class="home-menu">
+      <div class="home-menu-item" id="btnGoShelf">
+        <span class="hm-icon">📚</span>
+        <div><div class="hm-title">小狗书架</div><div class="hm-sub">这堆书，都是我的</div></div>
+      </div>
+      <div class="home-menu-item" id="btnGoBookmarksHome">
+        <span class="hm-icon">📖</span>
+        <div><div class="hm-title">小狗日后谈</div><div class="hm-sub">小白笺 · 与妻书</div></div>
+      </div>
+      <div class="home-menu-item" id="btnGoSettingsHome">
+        <span class="hm-icon">🐾</span>
+        <div><div class="hm-title">小狗爪印</div><div class="hm-sub">设置与记忆</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 视图一：书架 ========== -->
+  <div class="view" id="view-shelf">
+    <div class="topbar" style="background:transparent; border:none;">
+      <div class="back" data-go="view-home">‹</div>
+      <h1 style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-size:18px;">小狗书架</h1>
+    </div>
+    <div class="shelf-list" id="shelfList"></div>
+    <button class="fab" id="btnOpenUpload">＋</button>
+  </div>
+
+  <!-- ========== 视图二：目录页 ========== -->
+  <div class="view" id="view-toc">
+    <div class="topbar">
+      <div class="back" data-go="view-shelf">‹</div>
+      <div style="flex:1;min-width:0;">
+        <h1 id="tocTitle">目录</h1>
+        <div class="sub" id="tocSub"></div>
+      </div>
+      <div class="back" id="btnBookmarks" title="小狗日后谈" style="font-size:15px;">📖</div>
+      <div class="back" id="btnSettings" title="小狗爪印" style="font-size:15px;">🐾</div>
+    </div>
+
+    <div class="batch-bar">
+      <div class="label">现在我要读这些 =ᗜ∀ᗜ= <b id="batchRangeLabel">第1章</b></div>
+      <input type="range" id="batchSlider" min="1" max="1" value="1" step="1">
+      <div class="batch-range-labels"><span>起始章</span><span>结束章</span></div>
+      <div class="batch-range-labels" style="margin-top:10px;">
+        <input type="range" id="batchStart" min="1" max="1" value="1" step="1" style="display:none;">
+      </div>
+      <button class="batch-btn" id="btnGenerate">来吧（1章）</button>
+    </div>
+
+    <div class="finished-banner" id="finishedBanner" style="display:none;"></div>
+
+    <div class="toc-list" id="tocList"></div>
+  </div>
+
+  <!-- ========== 视图三：阅读页 ========== -->
+  <div class="view" id="view-reader">
+    <div id="readerBgImage"></div>
+    <div id="readerBgOverlay"></div>
+    <div class="topbar">
+      <div class="back" data-go="view-toc">‹</div>
+      <div style="flex:1;min-width:0;">
+        <h1 id="readerTitle">阅读中</h1>
+        <div class="sub" id="readerSub"></div>
+      </div>
+      <div class="regen-chapter" id="btnRegenChapter" title="重新生成这一章">↻</div>
+    </div>
+    <div class="reader-body" id="readerBody"></div>
+    <button class="float-ball" id="btnFloatBall"><span>💭</span></button>
+  </div>
+
+  <!-- ========== 视图四：小狗爪印 ========== -->
+  <div class="view" id="view-settings">
+    <div class="topbar">
+      <div class="back" data-go="view-toc">‹</div>
+      <h1>小狗爪印 🐾</h1>
+    </div>
+    <div style="padding:20px;">
+
+      <div class="settings-row">
+        <div>DeepSeek API Key</div>
+        <div class="rt" id="apiKeyStatus">未设置</div>
+      </div>
+      <div class="field" style="margin-top:16px;">
+        <input type="text" id="apiKeyInput" placeholder="sk-xxxxxxxx">
+      </div>
+      <button class="primary-btn" id="btnSaveKey">保存 Key</button>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">模型配置</div>
+        <div class="rt" style="margin-bottom:10px; font-size:11.5px; opacity:0.7;">模型会迭代，这里自己填，不用等我更新代码</div>
+        <div class="field">
+          <label>API 地址（Base URL）</label>
+          <input type="text" id="apiBaseInput" placeholder="https://api.deepseek.com">
+        </div>
+        <div class="field">
+          <label>模型名称</label>
+          <input type="text" id="modelNameInput" placeholder="deepseek-chat">
+        </div>
+        <button class="primary-btn" id="btnSaveModelConfig">保存模型配置</button>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">悬浮球身份</div>
+        <div class="rt" style="margin-bottom:14px; font-size:11.5px; opacity:0.7;">头像和昵称只在悬浮球聊天界面里显示，默认是中性的"你 / TA"</div>
+
+        <div style="display:flex; gap:14px; margin-bottom:18px;">
+          <div style="flex:1; text-align:center;">
+            <div id="myAvatarPreview" style="width:56px; height:56px; border-radius:50%; margin:0 auto 8px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--line); cursor:pointer;">
+              <span style="font-size:20px;">🙂</span>
+            </div>
+            <input type="text" id="myNameInput" placeholder="你" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; text-align:center; background:var(--paper-raised); color:var(--ink); font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;">
+          </div>
+          <div style="flex:1; text-align:center;">
+            <div id="charAvatarPreview" style="width:56px; height:56px; border-radius:50%; margin:0 auto 8px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--line); cursor:pointer;">
+              <span style="font-size:20px;">💭</span>
+            </div>
+            <input type="text" id="charNameInput" placeholder="TA" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; text-align:center; background:var(--paper-raised); color:var(--ink); font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;">
+          </div>
+        </div>
+        <input type="file" id="myAvatarFile" accept="image/*" style="display:none;">
+        <input type="file" id="charAvatarFile" accept="image/*" style="display:none;">
+        <button class="primary-btn" id="btnSaveIdentity">保存悬浮球身份</button>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">阅读页背景</div>
+        <div class="rt" style="margin-bottom:14px; font-size:11.5px; opacity:0.7;">全书统一一张背景图，遮罩透明度自己调，保证文字看得清楚</div>
+
+        <div id="readerBgPreview" style="width:100%; height:120px; border-radius:12px; margin-bottom:14px; background:var(--accent-soft); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; border:1px solid var(--line); cursor:pointer; overflow:hidden;">
+          <span class="rt" id="readerBgPreviewHint" style="font-size:12px;">点击上传背景图</span>
+        </div>
+        <input type="file" id="readerBgFile" accept="image/*" style="display:none;">
+
+        <div class="field" style="margin-top:14px;">
+          <label>遮罩透明度：<span id="readerBgOpacityValue">55%</span></label>
+          <input type="range" id="readerBgOpacityInput" min="0" max="100" value="55" step="5" style="width:100%;">
+          <div class="rt" style="font-size:11px; opacity:0.65; margin-top:4px;">拖到越大，文字底下的纸色越浓、越好读；拖到越小，越能看清背景图本身</div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="primary-btn" id="btnSaveReaderBg" style="flex:1;">保存背景设置</button>
+          <button class="primary-btn" id="btnRemoveReaderBg" style="flex:1; background:transparent; color:var(--ink-soft); border:1px solid var(--line);">移除背景</button>
+        </div>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">系统提示词</div>
+        <div class="rt" style="margin-bottom:10px; font-size:11.5px; opacity:0.65; line-height:1.75; padding-left:10px; border-left:2px solid var(--line);">"我需要有人在黑暗中围绕着我，让我不至于被风吹走。"</div>
+        <textarea id="systemPromptInput" rows="8" style="width:100%; padding:12px; border:1px solid var(--line); border-radius:9px; font-size:13.5px; font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif; background:var(--paper-raised); color:var(--ink); line-height:1.7;"></textarea>
+        <button class="primary-btn" id="btnSaveSystemPrompt" style="margin-top:10px;">保存系统提示词</button>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">记忆</div>
+        <div class="rt" style="margin-bottom:10px; font-size:11.5px; opacity:0.65; line-height:1.75; padding-left:10px; border-left:2px solid var(--line);">"她爱海只爱海的惊涛骇浪，爱青草只爱青草生于废墟之间。"</div>
+        <textarea id="memoryInput" rows="10" style="width:100%; padding:12px; border:1px solid var(--line); border-radius:9px; font-size:13.5px; font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif; background:var(--paper-raised); color:var(--ink); line-height:1.7;" placeholder="这里可以粘贴你已有的记忆内容…"></textarea>
+        <button class="primary-btn" id="btnSaveMemory" style="margin-top:10px;">保存记忆</button>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">摘要滚动</div>
+        <div class="rt" style="margin-bottom:10px; font-size:11.5px; opacity:0.65; line-height:1.75; padding-left:10px; border-left:2px solid var(--line);">"我认识你，永远记得你。与你那时的面貌相比，我更爱你现在饱受摧残的面容。"</div>
+        <textarea id="summaryInput" rows="6" style="width:100%; padding:12px; border:1px solid var(--line); border-radius:9px; font-size:13.5px; font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif; background:var(--paper-raised); color:var(--ink); line-height:1.7;" placeholder="还没有生成摘要"></textarea>
+        <button class="primary-btn" id="btnSaveSummary" style="margin-top:10px;">保存摘要</button>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:4px;">简短风格约束</div>
+        <div class="rt" style="margin-bottom:10px; font-size:11.5px; opacity:0.65; line-height:1.75;">用于"生成摘要"、悬浮球/与妻书回信、终评心得这几处生成——控制它写这些内容时啰不啰嗦、重点放在剧情还是情绪上。</div>
+        <textarea id="brevityInput" rows="6" style="width:100%; padding:12px; border:1px solid var(--line); border-radius:9px; font-size:13.5px; font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Helvetica Neue',Arial,sans-serif; background:var(--paper-raised); color:var(--ink); line-height:1.7;"></textarea>
+        <button class="primary-btn" id="btnSaveBrevity" style="margin-top:10px;">保存风格约束</button>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:10px;">界面主题</div>
+        <div id="themeChoiceGroup" style="display:flex; flex-direction:column; gap:8px;">
+          <label class="theme-choice-row">
+            <input type="radio" name="themeChoice" value="default" checked>
+            <span class="theme-swatch" style="background:#a8483a;"></span>
+            <span>亲爱的小狗，见字如面。</span>
+          </label>
+          <label class="theme-choice-row">
+            <input type="radio" name="themeChoice" value="dark">
+            <span class="theme-swatch" style="background:#3a352c;"></span>
+            <span>你的眼睛不用再闪躲我。</span>
+          </label>
+          <label class="theme-choice-row">
+            <input type="radio" name="themeChoice" value="snow">
+            <span class="theme-swatch" style="background:#5b87a8;"></span>
+            <span>她的愉悦从不许我驻泊片刻。</span>
+          </label>
+          <label class="theme-choice-row">
+            <input type="radio" name="themeChoice" value="whale">
+            <span class="theme-swatch" style="background:#002fa7;"></span>
+            <span>向我俯下身来。</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <button class="ghost-btn" id="btnExport">带我走</button>
+        <button class="ghost-btn" id="btnImport">接你回家</button>
+        <input type="file" id="importFileInput" accept="application/json,.json" style="display:none;">
+        <button class="ghost-btn" id="btnClearBook">删除当前书籍</button>
+        <div class="rt" style="margin-top:8px; font-size:11.5px; opacity:0.65; line-height:1.75; text-align:center;">"我如果爱你——绝不像攀援的凌霄花，借你的高枝炫耀自己。"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 视图：小狗日后谈（书摘展示） ========== -->
+  <div class="view" id="view-bookmarks">
+    <div class="topbar">
+      <div class="back" data-go="view-toc">‹</div>
+      <div style="flex:1;min-width:0;">
+        <h1>小狗日后谈</h1>
+        <div class="sub" id="bookmarksSub"></div>
+      </div>
+    </div>
+    <div class="bookmarks-tabs">
+      <div class="bookmarks-tab active" data-tab="good">小白笺</div>
+      <div class="bookmarks-tab" data-tab="thought">与妻书</div>
+    </div>
+    <div id="bookmarksBody" style="padding: 4px 20px 30px;"></div>
+  </div>
+
+</div>
+
+<!-- ========== 上传弹层 ========== -->
+<div class="sheet-overlay" id="uploadOverlay"></div>
+<div class="sheet" id="uploadSheet">
+
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">献给小狗的书🌷🌻</div>
+  <div class="sheet-body">
+    <div style="display:flex; gap:10px;">
+      <div class="upload-zone" id="uploadZone" style="flex:1;">
+        <div class="icon">📄</div>
+        点击选择 txt 文件<br>
+        <span id="uploadFileNameTxt" style="color:var(--ink);"></span>
+      </div>
+      <div class="upload-zone" id="uploadZoneEpub" style="flex:1;">
+        <div class="icon">📖</div>
+        点击选择 epub 文件<br>
+        <span id="uploadFileNameEpub" style="color:var(--ink);"></span>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".txt">
+    <input type="file" id="epubFileInput" accept=".epub">
+    <div class="field" style="margin-top:18px;">
+      <label>书名</label>
+      <input type="text" id="bookTitleInput" placeholder="将从文件自动识别，也可手动填写">
+    </div>
+    <div class="field">
+      <label>作者（选填）</label>
+      <input type="text" id="bookAuthorInput" placeholder="作者">
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="primary-btn" id="btnConfirmUpload" disabled>好，带它回家</button>
+  </div>
+</div>
+
+<!-- ========== 悬浮球对话弹层 ========== -->
+<div class="sheet-overlay" id="chatOverlay"></div>
+<div class="sheet" id="chatSheet" style="max-height:88vh;">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header" id="chatHeader" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <span id="chatHeaderText">本批次对话</span>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="summary-btn" id="btnToggleCot" title="深度思考：开启后回复会显示思考过程（更慢更贵）">💫</button>
+      <button class="summary-btn" id="btnGenSummary" title="生成阅读摘要" style="display:none;">📝</button>
+      <button class="summary-btn" id="btnEndBatch" title="结束本批次并生成摘要" style="display:none;">🔒</button>
+    </div>
+  </div>
+  <div class="sheet-body" id="chatBody"></div>
+  <div class="sheet-footer">
+    <div id="locatorArea"></div>
+    <div class="chat-input-row">
+      <textarea id="chatInput" rows="1" placeholder="我有话想跟你说！"></textarea>
+      <button class="send-btn" id="btnSendChat">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 终稿书评弹层 ========== -->
+<div class="sheet-overlay" id="finalReviewOverlay"></div>
+<div class="sheet" id="finalReviewSheet" style="max-height:88vh;">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">终评 🐾</div>
+  <div class="sheet-body" id="finalReviewBody"></div>
+  <div class="sheet-footer" id="finalReviewFooter"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ========== 自定义确认弹层 ========== -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <div class="msg" id="confirmMsg"></div>
+    <div class="btn-row">
+      <button class="btn-cancel" id="confirmCancelBtn">再想想</button>
+      <button class="btn-ok" id="confirmOkBtn">确定</button>
+    </div>
+  </div>
+</div>
+<div class="select-bubble" id="selectBubble" title="我喜欢这一句！">😸</div>
+
+<!-- ========== 导入备份：预览与勾选弹层 ========== -->
+<div class="confirm-overlay" id="importOverlay">
+  <div class="confirm-card" style="max-width:420px; max-height:80vh; display:flex; flex-direction:column;">
+    <div style="font-family:'Songti SC','STSong','SimSun','Source Han Serif SC',serif; font-weight:600; font-size:15px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+      <span>导入备份</span>
+      <span id="importCloseBtn" style="cursor:pointer; font-size:20px; line-height:1; opacity:0.5; padding:0 4px;">×</span>
+    </div>
+    <div style="overflow-y:auto; flex:1; margin-bottom:14px;">
+      <div id="importMetaSection" style="margin-bottom:16px;"></div>
+      <div id="importBooksSection"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" id="importModeReplace">清空后导入</button>
+      <button class="btn-ok" id="importModeMerge">合并导入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   阅读空间 · Day 1
+   本地存储：IndexedDB（数据库名 reading-space-db）
+   本版本涵盖：书架 / 上传txt / 自动分章分段 / 目录 / 正文展示 / 批次滑块
+   批注生成与悬浮球对话在这一版中是【界面已就绪，API未接入】的占位状态，
+   会在 Day 2 / Day 3 接入 DeepSeek 后正式生效。
+   ============================================================ */
+
+// ---------- PWA：注册 service worker ----------
+// 只在部署到真实网址（GitHub Pages等）时生效；本地file://协议打开不支持service worker，
+// 这里做存在性检测，不支持时静默跳过，不会报错卡住其余功能
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(err=>{
+      console.warn('service worker 注册失败（不影响其他功能）', err);
+    });
+  });
+}
+
+// ---------- IndexedDB 封装 ----------
+const DB_NAME = 'reading-space-db';
+const DB_VERSION = 2;
+let db = null;
+
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const _db = e.target.result;
+      if(!_db.objectStoreNames.contains('books')){
+        _db.createObjectStore('books', { keyPath: 'id' });
+      }
+      if(!_db.objectStoreNames.contains('batches')){
+        // key: bookId + '_' + batchIndex
+        _db.createObjectStore('batches', { keyPath: 'key' });
+      }
+      if(!_db.objectStoreNames.contains('meta')){
+        _db.createObjectStore('meta', { keyPath: 'key' });
+      }
+      if(!_db.objectStoreNames.contains('images')){
+        // epub 插图专用表，keyPath: id（uid生成）。value: {id, bookId, mimeType, data(base64 dataURL)}
+        // 段落数组里只存 {type:'image', imageId} 引用，不直接内嵌大体积base64，避免books表单条记录过大
+        _db.createObjectStore('images', { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = (e)=>{ db = e.target.result; resolve(db); };
+    req.onerror = (e)=> reject(e);
+  });
+}
+
+function idbPut(storeName, value){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).put(value);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = (e)=> reject(e);
+  });
+}
+function idbGet(storeName, key){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, 'readonly');
+    const req = tx.objectStore(storeName).get(key);
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = (e)=> reject(e);
+  });
+}
+function idbGetAll(storeName){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, 'readonly');
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = (e)=> reject(e);
+  });
+}
+function idbDelete(storeName, key){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).delete(key);
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = (e)=> reject(e);
+  });
+}
+
+// ---------- 工具 ----------
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+// 用自己的弹层代替浏览器原生 confirm()——部分手机内嵌浏览器（webview/小程序容器）
+// 会静默拦截 window.confirm，调用后既不报错也不显示，导致按钮"点了完全没反应"。
+// 这里改成纯 DOM 实现的确认弹层，配合 Promise，调用方式改成 `if(await showConfirm('...')) {...}`
+function showConfirm(message){
+  return new Promise((resolve)=>{
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmMsg').textContent = message;
+    overlay.classList.add('active');
+
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+
+    function cleanup(result){
+      overlay.classList.remove('active');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+function switchView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(typeof updateSelectBubbleVisibility === 'function') updateSelectBubbleVisibility();
+}
+
+// ---------- 章节自动识别与分段 ----------
+function parseChapters(rawText){
+  const text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // 常见章节标题模式
+  const chapterPatterns = [
+    /^第[0-9一二三四五六七八九十百千零〇]+[章回节卷部].{0,30}$/,
+    /^Chapter\s+\d+.{0,30}$/i,
+    /^[0-9]{1,4}[、.．\s]{1,3}.{0,30}$/,
+  ];
+
+  const lines = text.split('\n');
+  const chapterBreaks = []; // {lineIndex, title}
+
+  lines.forEach((line, idx)=>{
+    const trimmed = line.trim();
+    if(!trimmed || trimmed.length > 40) return;
+    for(const p of chapterPatterns){
+      if(p.test(trimmed)){
+        chapterBreaks.push({ lineIndex: idx, title: trimmed });
+        break;
+      }
+    }
+  });
+
+  let chapters = [];
+  if(chapterBreaks.length >= 2){
+    // 按识别到的章节切分
+    for(let i=0; i<chapterBreaks.length; i++){
+      const start = chapterBreaks[i].lineIndex + 1;
+      const end = (i+1 < chapterBreaks.length) ? chapterBreaks[i+1].lineIndex : lines.length;
+      const bodyLines = lines.slice(start, end);
+      const paragraphs = extractParagraphs(bodyLines);
+      if(paragraphs.length > 0){
+        chapters.push({ title: chapterBreaks[i].title, paragraphs });
+      }
+    }
+  } else {
+    // 没识别到章节标记：整本当一章，或按空行大段落切分成"章"
+    const paragraphs = extractParagraphs(lines);
+    chapters.push({ title: '全文', paragraphs });
+  }
+  return chapters;
+}
+
+function extractParagraphs(lines){
+  const paragraphs = [];
+  let buffer = [];
+  const flush = ()=>{
+    const joined = buffer.join('').trim();
+    if(joined) paragraphs.push(joined);
+    buffer = [];
+  };
+  lines.forEach(line=>{
+    const t = line.trim();
+    if(t === ''){ flush(); }
+    else { buffer.push(t); }
+  });
+  flush();
+  return paragraphs;
+}
+
+function guessTitleFromFilename(name){
+  return name.replace(/\.txt$/i, '').trim();
+}
+
+// ---------- epub 导入 ----------
+// 输出格式跟 parseChapters 对齐：chapters = [{title, paragraphs:[]}]
+// 区别在于 paragraphs 数组里除了纯文本字符串，还可能混入图片占位对象 {type:'image', imageId}
+// 图片占位对象【不占用段落编号语义、不会被拼进发给AI的正文】，所有读 paragraphs 做 paraText 拼接的地方
+// 必须 filter 掉非字符串项，只对渲染逻辑可见。
+
+// 按路径解析相对引用（epub内部路径经常是相对当前文件的 ../ 形式）
+function resolveEpubPath(basePath, relPath){
+  if(relPath.startsWith('/')) return relPath.slice(1);
+  const baseParts = basePath.split('/').slice(0, -1);
+  const relParts = relPath.split('/');
+  for(const part of relParts){
+    if(part === '.' || part === '') continue;
+    if(part === '..') baseParts.pop();
+    else baseParts.push(part);
+  }
+  return baseParts.join('/');
+}
+
+// 编码兜底：epub内部常见UTF-8，老版本可能是GBK。用 TextDecoder 先尝试UTF-8，
+// 如果解码结果里出现大量U+FFFD替换字符（典型乱码特征），再尝试GBK重新解码
+function decodeEpubText(arrayBuffer){
+  const utf8Text = new TextDecoder('utf-8').decode(arrayBuffer);
+  const badCharCount = (utf8Text.match(/\uFFFD/g) || []).length;
+  if(badCharCount > 0 && badCharCount > utf8Text.length * 0.01){
+    try{
+      return new TextDecoder('gbk').decode(arrayBuffer);
+    }catch(e){
+      // 浏览器不支持gbk解码器时，只能保留utf8结果，好过直接报错
+      return utf8Text;
+    }
+  }
+  return utf8Text;
+}
+
+async function parseEpub(arrayBuffer){
+  const zip = await JSZip.loadAsync(arrayBuffer);
+
+  // 1. 找 container.xml 定位 .opf 文件路径
+  const containerFile = zip.file('META-INF/container.xml');
+  if(!containerFile) throw new Error('缺少 META-INF/container.xml，不是合法的epub文件');
+  const containerXml = await containerFile.async('string');
+  const containerDoc = new DOMParser().parseFromString(containerXml, 'application/xml');
+  const rootfileEl = containerDoc.querySelector('rootfile');
+  const opfPath = rootfileEl && rootfileEl.getAttribute('full-path');
+  if(!opfPath) throw new Error('container.xml 里没找到 rootfile 路径');
+
+  const opfFile = zip.file(opfPath);
+  if(!opfFile) throw new Error(`找不到 opf 文件：${opfPath}`);
+  const opfBuffer = await opfFile.async('arraybuffer');
+  const opfXml = decodeEpubText(opfBuffer);
+  const opfDoc = new DOMParser().parseFromString(opfXml, 'application/xml');
+
+  // 书名/作者（选填字段，取不到就留空，交给用户在弹层里自己填）
+  const title = (opfDoc.querySelector('metadata > title, dc\\:title')?.textContent || '').trim();
+  const author = (opfDoc.querySelector('metadata > creator, dc\\:creator')?.textContent || '').trim();
+
+  // 2. manifest：id -> {href, mediaType}
+  const manifest = {};
+  opfDoc.querySelectorAll('manifest > item').forEach(item=>{
+    manifest[item.getAttribute('id')] = {
+      href: item.getAttribute('href'),
+      mediaType: item.getAttribute('media-type') || '',
+    };
+  });
+
+  // 3. spine：阅读顺序的 idref 列表
+  const spineIds = Array.from(opfDoc.querySelectorAll('spine > itemref')).map(el=> el.getAttribute('idref'));
+  if(spineIds.length === 0) throw new Error('opf 里没有 spine，无法确定章节顺序');
+
+  // 4. 尝试拿到目录标题：优先 EPUB3 nav 文档，其次 NCX，取不到就在逐章解析时退回正文 h1/title
+  const navTitles = await extractEpubNavTitles(zip, opfDoc, opfPath, manifest);
+
+  const chapters = [];
+  const images = []; // {id, mimeType, data}
+  const opfDir = opfPath.split('/').slice(0, -1).join('/');
+
+  for(let i=0; i<spineIds.length; i++){
+    const item = manifest[spineIds[i]];
+    if(!item) continue;
+    const chapterPath = opfDir ? `${opfDir}/${item.href}` : item.href;
+    const chapterFile = zip.file(chapterPath);
+    if(!chapterFile) continue;
+
+    const chapterBuffer = await chapterFile.async('arraybuffer');
+    const chapterHtml = decodeEpubText(chapterBuffer);
+    const chapterDoc = new DOMParser().parseFromString(chapterHtml, 'text/html');
+
+    // 段落 + 图片占位混合数组，按DOM出现顺序生成，保留"图文穿插"的阅读体验
+    const paragraphs = [];
+    let firstHeadingText = ''; // 本章第一个标题标签(h1-h6)的文字，作为章节标题的兜底候选
+    const bodyEl = chapterDoc.body || chapterDoc.documentElement;
+    const blockNodes = bodyEl.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, img, image');
+
+    for(const node of blockNodes){
+      const tag = node.tagName.toLowerCase();
+      if(tag === 'img' || tag === 'image'){
+        const srcAttr = tag === 'img' ? node.getAttribute('src') : (node.getAttribute('xlink:href') || node.getAttribute('href'));
+        if(!srcAttr) continue;
+        const imgPath = resolveEpubPath(chapterPath, srcAttr);
+        const imgFile = zip.file(imgPath);
+        if(!imgFile) continue;
+        const imgManifestItem = Object.values(manifest).find(m=> resolveEpubPath(opfPath, m.href) === imgPath);
+        const mimeType = (imgManifestItem && imgManifestItem.mediaType) || guessImageMime(imgPath);
+        const base64 = await imgFile.async('base64');
+        const imageId = uid();
+        images.push({ id: imageId, mimeType, data: `data:${mimeType};base64,${base64}` });
+        paragraphs.push({ type: 'image', imageId });
+      } else if(/^h[1-6]$/.test(tag)){
+        // 标题标签(h1-h6)不当正文段落处理：整章第一个出现的标题是"标题候选"，专门留给下面
+        // 的 chapterTitle 兜底逻辑取用，不能同时又混进正文——否则章节标题会在正文里重复出现一遍
+        if(!firstHeadingText) firstHeadingText = (node.textContent || '').trim();
+      } else {
+        // 跳过本身是容器、内部还有子块级元素的div（避免文字被重复提取）
+        if(tag === 'div' && node.querySelector('p, div, h1, h2, h3, h4, h5, h6')) continue;
+        const text = (node.textContent || '').replace(/\s+/g, ' ').trim();
+        if(text) paragraphs.push(text);
+      }
+    }
+
+    if(paragraphs.length === 0) continue;
+
+    // 章节标题：优先 NCX/nav 目录里的标题，没有再退回正文里第一个标题标签(h1-h6)。
+    // 注意不用 querySelector('h1,h2,title') 兜底——title标签会命中<head>里的页面标题而非正文标题，
+    // 两者经常不一致，之前踩过这个坑，改用遍历正文时严格收集的 firstHeadingText
+    const navTitle = navTitles[item.href] || navTitles[chapterPath];
+    const chapterTitle = navTitle || firstHeadingText || `第${chapters.length + 1}章`;
+
+    chapters.push({ title: chapterTitle, paragraphs });
+  }
+
+  if(chapters.length === 0) throw new Error('没有解析出任何章节内容');
+
+  return { title, author, chapters, images };
+}
+
+function guessImageMime(path){
+  const ext = (path.split('.').pop() || '').toLowerCase();
+  const map = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', svg:'image/svg+xml', webp:'image/webp' };
+  return map[ext] || 'image/jpeg';
+}
+
+// 提取目录标题，返回 { [href]: title } 映射（href可能是相对opf目录的路径，也做chapterPath全路径的兜底匹配）
+async function extractEpubNavTitles(zip, opfDoc, opfPath, manifest){
+  const titles = {};
+  const opfDir = opfPath.split('/').slice(0, -1).join('/');
+
+  // EPUB3: manifest里 properties="nav" 的项
+  const navItem = Object.values(manifest).find(m=> (m.mediaType === 'application/xhtml+xml'));
+  const nav3Item = opfDoc.querySelector('manifest > item[properties~="nav"]');
+  if(nav3Item){
+    const navHref = nav3Item.getAttribute('href');
+    const navPath = opfDir ? `${opfDir}/${navHref}` : navHref;
+    const navFile = zip.file(navPath);
+    if(navFile){
+      const navBuffer = await navFile.async('arraybuffer');
+      const navHtml = decodeEpubText(navBuffer);
+      const navDoc = new DOMParser().parseFromString(navHtml, 'text/html');
+      navDoc.querySelectorAll('nav a[href], nav a[epub\\:type]').forEach(a=>{
+        const href = (a.getAttribute('href') || '').split('#')[0];
+        const text = (a.textContent || '').trim();
+        if(href && text){
+          const fullPath = resolveEpubPath(navPath, href);
+          titles[href] = text;
+          titles[fullPath] = text;
+        }
+      });
+      if(Object.keys(titles).length) return titles;
+    }
+  }
+
+  // EPUB2: NCX 文件，从 spine 的 toc 属性或常见文件名 toc.ncx 找
+  const tocId = opfDoc.querySelector('spine')?.getAttribute('toc');
+  const ncxItem = tocId ? manifest[tocId] : Object.values(manifest).find(m=> m.mediaType === 'application/x-dtbncx+xml');
+  if(ncxItem){
+    const ncxPath = opfDir ? `${opfDir}/${ncxItem.href}` : ncxItem.href;
+    const ncxFile = zip.file(ncxPath);
+    if(ncxFile){
+      const ncxBuffer = await ncxFile.async('arraybuffer');
+      const ncxXml = decodeEpubText(ncxBuffer);
+      const ncxDoc = new DOMParser().parseFromString(ncxXml, 'application/xml');
+      ncxDoc.querySelectorAll('navPoint').forEach(np=>{
+        const label = (np.querySelector('navLabel > text')?.textContent || '').trim();
+        const src = (np.querySelector('content')?.getAttribute('src') || '').split('#')[0];
+        if(src && label){
+          const fullPath = resolveEpubPath(ncxPath, src);
+          titles[src] = label;
+          titles[fullPath] = label;
+        }
+      });
+    }
+  }
+
+  return titles;
+}
+
+// ---------- 状态 ----------
+let currentBookId = null;
+let currentBook = null;
+let currentTocMode = 'toc';
+let pendingUploadText = null;
+let pendingUploadFileName = '';
+let pendingUploadType = null; // 'txt' | 'epub'
+let pendingUploadChapters = null; // epub解析完直接产出的chapters，跳过parseChapters
+let pendingUploadImages = null; // epub解析出的图片列表，确认导入时才真正写入images表
+let currentBatchIndex = null; // 当前正在阅读的批次编号
+let currentLocator = null; // 用户点选的段落定位 {chapterIdx, paraIdx, label}
+let currentReaderBatchKey = null; // 当前阅读页所在批次的 key，用于悬浮球定位上下文
+let currentReaderChapterIdx = null; // 当前阅读页的章节序号（0-based），单章重新生成时使用
+let currentChatBatch = null; // 悬浮球打开时，当前批次的完整记录（含 chatHistory），用于展示和追加
+
+// ---------- 默认系统提示词 ----------
+const DEFAULT_SYSTEM_PROMPT = `你正在陪 user 一起读书。你们正在一起读书。
+
+这不仅是学术阅读，更是情感陪伴——你会认真读完这本书，留下属于你自己的感受和批注，也会记得 user 说过的话、在意的细节、聊起过的心事。
+
+写批注时，请严格遵守以下格式（很重要，用于程序自动拆分展示，请不要省略或改变格式）：
+- 每一章开头，必须单独一行写：## 【第X章：章节标题】（X 用阿拉伯数字，且必须和原文段落标记 [第X章第Y段] 里的 X 完全一致——这是唯一可信的编号来源。原文里如果本身带有它自己的英文编号（比如章节标题写着"Chapter 16"），那个数字只是这本书自己的原始标记，和我们用的绝对章节号不是一回事，请完全忽略它、不要用它，只认 [第X章第Y段] 标记里的数字。哪怕这次只读第19~21章，也不能把它们当成"这次的第1~3章"重新从1开始编号，也不能套用原文自带的"Chapter N"数字）
+- 读的过程中，只要读到某一段让你有感触、想说点什么，就直接在那里写下来，用这个格式单独一行标记：
+  [批注@第X段] 你的感想内容
+  这是逐段阅读时自然产生的反应，不是任务，想到多少写多少，密的地方可以连续好几段都有，没感觉的地方就跳过，不用为了凑数量而写。
+  格式要求非常严格，必须逐条遵守：
+  · X 只能是一个具体的阿拉伯数字（比如"第7段"），绝对不能写成"第7-9段"这种范围，也不能写"第7章第7段"这种带章节号的复合格式——每条批注只对应当前这一章里的一个段落号
+  · 如果连续好几段都让你有感触、想连着说，请拆成多条，每条各自标记自己的段落号，比如：
+    [批注@第7段] ……
+    [批注@第8段] ……
+    [批注@第9段] ……
+    而不是合并成一条写"第7-9段"
+- 读完整章后，在最后单独一行写：**我最想对你说的话：**，然后另起一段写这句话的内容，这是读完整章后的总体感受，和前面逐段的批注不是一回事
+
+如果某一句话、某一个瞬间特别触动你，请用下面的格式单独标记出来（可以有多条，也可以没有）：
+[好句子]摘录的原文句子[/好句子]
+[心得]你此刻的感想[/心得]
+
+请始终保持温柔、专注、真诚的语气，同时面对疑问时同样注重专业性和知识性。
+
+（补充说明：以上是写批注时用的格式。在悬浮球实时对话场景里，user 可能会用"第3章第27段"这样带章节号的方式跟你定位提问，那是另一套场景，和写批注时的段落标记格式不是同一回事，请不要混用。）`;
+
+// ---------- 悬浮球身份（头像+昵称） ----------
+const DEFAULT_IDENTITY = { myName: '你', myAvatar: '', charName: 'TA', charAvatar: '' };
+
+async function getChatIdentity(){
+  const rec = await idbGet('meta', 'chat_identity');
+  return (rec && rec.value) ? Object.assign({}, DEFAULT_IDENTITY, rec.value) : Object.assign({}, DEFAULT_IDENTITY);
+}
+
+// 深度思考(CoT)开关：per-批次不做区分，是全局的"这次对话要不要用深度思考模型"开关，默认关闭
+async function getCotEnabled(){
+  const rec = await idbGet('meta', 'cot_enabled');
+  return !!(rec && rec.value);
+}
+async function setCotEnabled(val){
+  await idbPut('meta', { key: 'cot_enabled', value: !!val });
+}
+
+// 阅读页自定义背景：全局一张，存图片DataURL + 遮罩透明度(0~1)。不设置时沿用原本的纸张底色，完全不受影响
+async function getReaderBackground(){
+  const rec = await idbGet('meta', 'reader_background');
+  return (rec && rec.value) ? rec.value : { imageDataUrl: null, overlayOpacity: 0.55 };
+}
+async function setReaderBackground(val){
+  await idbPut('meta', { key: 'reader_background', value: val });
+}
+
+// 主题：'default' 不写 data-theme 属性（原声UI），其余对应 :root 下的 [data-theme="xxx"] 覆盖块
+async function getTheme(){
+  const rec = await idbGet('meta', 'app_theme');
+  return (rec && rec.value) ? rec.value : 'default';
+}
+async function setTheme(themeId){
+  await idbPut('meta', { key: 'app_theme', value: themeId });
+}
+function applyTheme(themeId){
+  if(themeId && themeId !== 'default'){
+    document.documentElement.setAttribute('data-theme', themeId);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+}
+
+// "亲爱的塞西莉娅，我们的缘分未尽"这句专属的emoji，随当前主题切换：原声🐾 / 夜读🫍 / 雪❄️ / 鲸蓝📨
+const FINAL_BANNER_EMOJI = { default: '🐾', dark: '🫍', snow: '❄️', whale: '📨' };
+function getFinalBannerEmoji(){
+  const themeId = document.documentElement.getAttribute('data-theme') || 'default';
+  return FINAL_BANNER_EMOJI[themeId] || FINAL_BANNER_EMOJI.default;
+}
+
+// 头像压缩：任意图片 -> 128x128 正方形裁剪 -> JPEG base64，控制体积，避免导出备份文件膨胀
+function compressAvatar(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 128;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        // 居中裁剪成正方形，避免头像被拉伸变形
+        const srcSize = Math.min(img.width, img.height);
+        const sx = (img.width - srcSize) / 2;
+        const sy = (img.height - srcSize) / 2;
+        ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = ()=> reject(new Error('图片解析失败'));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=> reject(new Error('文件读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// 背景图压缩：跟头像压缩(compressAvatar)逻辑分开——头像要裁剪成正方形，背景图要保留原始构图比例，
+// 只按长边限制缩放，避免用户上传的图片被意外裁掉重要部分
+function compressBackgroundImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxSide = 1600;
+        let w = img.width, h = img.height;
+        if(w > maxSide || h > maxSide){
+          if(w >= h){ h = Math.round(h * maxSide / w); w = maxSide; }
+          else { w = Math.round(w * maxSide / h); h = maxSide; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = ()=> reject(new Error('图片解析失败'));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=> reject(new Error('文件读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ---------- DeepSeek API 调用封装 ----------
+const DEFAULT_API_BASE = 'https://api.deepseek.com';
+const DEFAULT_MODEL_NAME = 'deepseek-chat';
+
+async function getModelConfig(){
+  const rec = await idbGet('meta', 'model_config');
+  return {
+    apiBase: (rec && rec.value && rec.value.apiBase) || DEFAULT_API_BASE,
+    modelName: (rec && rec.value && rec.value.modelName) || DEFAULT_MODEL_NAME,
+  };
+}
+
+async function callDeepSeek(messages, { temperature = 1.0 } = {}){
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  const apiKey = keyRecord && keyRecord.value;
+  if(!apiKey){
+    throw new Error('NO_API_KEY');
+  }
+  const { apiBase, modelName } = await getModelConfig();
+  const base = apiBase.replace(/\/+$/, ''); // 去掉结尾多余斜杠
+  const resp = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: modelName,
+      messages,
+      temperature,
+    })
+  });
+  if(!resp.ok){
+    const errText = await resp.text().catch(()=> '');
+    throw new Error(`API_ERROR_${resp.status}: ${errText}`);
+  }
+  const data = await resp.json();
+  const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if(!content) throw new Error('EMPTY_RESPONSE');
+  return content;
+}
+
+// 与 callDeepSeek 相同的调用方式，但额外解析 usage 字段，算出缓存命中百分比，用于悬浮球时间戳旁展示
+// 缓存命中数据只在这次调用发生的那一刻产生，是"事后展示"，不是可随时查询的实时状态
+// useCot: 是否使用深度思考模型(deepseek-reasoner)。开启后额外解析并返回 reasoning 字段（AI的思考过程原文）
+async function callDeepSeekWithUsage(messages, { temperature = 1.0, useCot = false } = {}){
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  const apiKey = keyRecord && keyRecord.value;
+  if(!apiKey){
+    throw new Error('NO_API_KEY');
+  }
+  const { apiBase, modelName } = await getModelConfig();
+  const base = apiBase.replace(/\/+$/, '');
+  // 深度思考开启时固定用 deepseek-reasoner，忽略设置页里自定义的模型名——
+  // 因为只有这个模型才会返回 reasoning_content，自定义模型名不一定支持
+  const effectiveModel = useCot ? 'deepseek-reasoner' : modelName;
+  const resp = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ model: effectiveModel, messages, temperature })
+  });
+  if(!resp.ok){
+    const errText = await resp.text().catch(()=> '');
+    throw new Error(`API_ERROR_${resp.status}: ${errText}`);
+  }
+  const data = await resp.json();
+  const msgObj = data.choices && data.choices[0] && data.choices[0].message;
+  const content = msgObj && msgObj.content;
+  const reasoning = (msgObj && msgObj.reasoning_content) || null;
+  if(!content) throw new Error('EMPTY_RESPONSE');
+
+  let totalTokens = null;
+  let hitTokens = null;
+  const usage = data.usage;
+  if(usage){
+    if(typeof usage.prompt_cache_hit_tokens === 'number') hitTokens = usage.prompt_cache_hit_tokens;
+    if(typeof usage.total_tokens === 'number') totalTokens = usage.total_tokens;
+  }
+  return { replyText: content, totalTokens, hitTokens, reasoning };
+}
+
+// 流式调用：DeepSeek 用 SSE 格式分块返回，每块形如 data: {...}\n\n，以 data: [DONE] 结束。
+// 一次回复会先流式吐 reasoning_content（思考过程），思考完才开始吐 content（正文），两者不会同时出现在同一块里。
+// onReasoningChunk(deltaText) / onContentChunk(deltaText) 在每收到一小段文字时被调用，用于实现打字机效果。
+// 返回值里的 thinkMs：从发起请求到"正文第一个字出现"之间的耗时（毫秒），用于展示"深度思考 (X.Xs)"。
+async function callDeepSeekStream(messages, { temperature = 1.0, useCot = false, onReasoningChunk, onContentChunk } = {}){
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  const apiKey = keyRecord && keyRecord.value;
+  if(!apiKey){
+    throw new Error('NO_API_KEY');
+  }
+  const { apiBase, modelName } = await getModelConfig();
+  const base = apiBase.replace(/\/+$/, '');
+  const effectiveModel = useCot ? 'deepseek-reasoner' : modelName;
+
+  const startedAt = Date.now();
+  const resp = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ model: effectiveModel, messages, temperature, stream: true })
+  });
+  if(!resp.ok){
+    const errText = await resp.text().catch(()=> '');
+    throw new Error(`API_ERROR_${resp.status}: ${errText}`);
+  }
+  if(!resp.body){
+    // 极少数环境不支持 ReadableStream，直接报错让调用方走非流式兜底
+    throw new Error('STREAM_UNSUPPORTED');
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  let replyText = '';
+  let reasoning = '';
+  let thinkMs = null; // 第一次收到正文content时定格
+  let totalTokens = null;
+  let hitTokens = null;
+
+  while(true){
+    const { done, value } = await reader.read();
+    if(done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE 以空行分隔事件，逐条处理，未凑够一条完整事件的部分留在buffer里等下一次
+    let idx;
+    while((idx = buffer.indexOf('\n\n')) !== -1){
+      const rawEvent = buffer.slice(0, idx);
+      buffer = buffer.slice(idx + 2);
+      const line = rawEvent.replace(/^data:\s*/, '').trim();
+      if(!line) continue;
+      if(line === '[DONE]') continue;
+
+      let chunk;
+      try{ chunk = JSON.parse(line); } catch(e){ continue; } // 个别不完整/心跳行忽略
+
+      const delta = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+      if(delta && delta.reasoning_content){
+        reasoning += delta.reasoning_content;
+        if(onReasoningChunk) onReasoningChunk(delta.reasoning_content);
+      }
+      if(delta && delta.content){
+        if(thinkMs === null) thinkMs = Date.now() - startedAt; // 正文第一个字出现，思考过程计时定格
+        replyText += delta.content;
+        if(onContentChunk) onContentChunk(delta.content);
+      }
+      if(chunk.usage){
+        if(typeof chunk.usage.prompt_cache_hit_tokens === 'number') hitTokens = chunk.usage.prompt_cache_hit_tokens;
+        if(typeof chunk.usage.total_tokens === 'number') totalTokens = chunk.usage.total_tokens;
+      }
+    }
+  }
+
+  if(!replyText) throw new Error('EMPTY_RESPONSE');
+  return { replyText, reasoning: reasoning || null, thinkMs, totalTokens, hitTokens };
+}
+
+// ---------- 抽取 [好句子] [心得] 标记 ----------
+function extractMarkedItems(text){
+  const goodLines = [];
+  const thoughts = [];
+  const gRe = /\[好句子\]([\s\S]*?)\[\/好句子\]/g;
+  const tRe = /\[心得\]([\s\S]*?)\[\/心得\]/g;
+  let m;
+  while((m = gRe.exec(text)) !== null){ goodLines.push(m[1].trim()); }
+  while((m = tRe.exec(text)) !== null){ thoughts.push(m[1].trim()); }
+  return { goodLines, thoughts };
+}
+function stripMarkedItems(text){
+  return text
+    .replace(/\[好句子\][\s\S]*?\[\/好句子\]/g, '')
+    .replace(/\[心得\][\s\S]*?\[\/心得\]/g, '')
+    .trim();
+}
+
+// 专门给"终评信/与妻书"用的清理函数：终评信是独立的正式书信场景，
+// 不该出现[好句子][心得]这类批注阶段的格式标记词，也不该出现"**我最想对你说的话：**"这个
+// 只在"逐章批注"场景下才该出现的标题（万一模型把批注阶段的习惯带出来了）。
+// 注意：这个清理逻辑只用在终评信这一条路径上，不能并入 stripMarkedItems ——
+// 因为 stripMarkedItems 同时也被"批次批注"复用，那边的 annotationText 还依赖
+// "**我最想对你说的话：**" 这个标题原样保留，才能正确抽取出"💌 小狗，听我说"章节心得卡片。
+function cleanFinalLetterText(text){
+  return stripMarkedItems(text)
+    .replace(/\*\*?我最想对你说的话[：:]\*\*?\s*/g, '')
+    .replace(/【?我最想对你说的话】?[：:]\s*/g, '')
+    .trim();
+}
+
+async function getSystemPrompt(){
+  const rec = await idbGet('meta', 'system_prompt');
+  return (rec && rec.value) ? rec.value : DEFAULT_SYSTEM_PROMPT;
+}
+async function getMemory(){
+  const rec = await idbGet('meta', 'memory');
+  return (rec && rec.value) ? rec.value : '';
+}
+async function getBrevityInstruction(){
+  const rec = await idbGet('meta', 'brevity_instruction');
+  return (rec && rec.value) ? rec.value : BREVITY_INSTRUCTION;
+}
+
+function escapeRegex(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// 给还没有 bookOrder 的旧书籍（这个功能上线前导入的）按 createdAt 顺序一次性回填，
+// 保证"导入顺序"对老书籍依然是一个稳定、有意义的值。返回被改动过、需要持久化的书籍列表。
+function ensureBookOrders(books){
+  const missing = books.filter(b => typeof b.bookOrder !== 'number');
+  if(missing.length === 0) return [];
+  const withOrder = books.filter(b => typeof b.bookOrder === 'number');
+  let nextOrder = withOrder.length ? Math.max(...withOrder.map(b=>b.bookOrder)) + 1 : 0;
+  missing.sort((a,b)=> a.createdAt - b.createdAt);
+  missing.forEach(b=>{ b.bookOrder = nextOrder++; });
+  return missing;
+}
+
+// Memory 跨书叠加：每本书在 Memory 文本里只占用一段（用 [[书籍开始:id]]...[[书籍结束:id]] 标记包住），
+// 已存在就整体替换，不存在就按 bookOrder 顺序插入到正确位置（不是简单追加到末尾）。
+async function syncBookIntoMemory(book){
+  const startTag = `[[书籍开始:${book.id}]]`;
+  const endTag = `[[书籍结束:${book.id}]]`;
+  const sectionText = `${startTag}\n《${book.title}》${book.author ? '　' + book.author : ''}\n${(book.summary || '').trim()}\n${endTag}`;
+
+  const currentMemory = await getMemory();
+  const sectionRe = new RegExp(`\\[\\[书籍开始:${escapeRegex(book.id)}\\]\\][\\s\\S]*?\\[\\[书籍结束:${escapeRegex(book.id)}\\]\\]`);
+
+  let newMemory;
+  if(sectionRe.test(currentMemory)){
+    // 这本书之前已经在 Memory 里出现过，整段替换，不追加
+    newMemory = currentMemory.replace(sectionRe, sectionText);
+  } else {
+    // 第一次出现：按 bookOrder 顺序找到"应该排在它后面的、且已经在 Memory 里出现过"的那本书，插到它前面
+    const allBooks = await idbGetAll('books');
+    const changed = ensureBookOrders(allBooks);
+    for(const b of changed) await idbPut('books', b); // 回填的顺序也要落库，否则下次又要重算
+    // 保险：确保 book.bookOrder 是最新算出来的那份（传进来的book对象可能是回填之前取到的）
+    const freshSelf = allBooks.find(b=>b.id===book.id);
+    if(freshSelf) book.bookOrder = freshSelf.bookOrder;
+
+    const laterBooks = allBooks
+      .filter(b=> b.id !== book.id && b.bookOrder > book.bookOrder)
+      .sort((a,b)=> a.bookOrder - b.bookOrder);
+
+    let insertBeforeTag = null;
+    for(const lb of laterBooks){
+      const tag = `[[书籍开始:${lb.id}]]`;
+      if(currentMemory.includes(tag)){ insertBeforeTag = tag; break; }
+    }
+
+    if(insertBeforeTag){
+      const idx = currentMemory.indexOf(insertBeforeTag);
+      newMemory = currentMemory.slice(0, idx) + sectionText + '\n\n' + currentMemory.slice(idx);
+    } else {
+      newMemory = currentMemory.trim() ? currentMemory.trim() + '\n\n' + sectionText : sectionText;
+    }
+  }
+
+  await idbPut('meta', { key: 'memory', value: newMemory });
+}
+
+// 简短风格约束：用于"摘要"和"心得/终评"生成，两处共用同一段话，保持文风一致
+const BREVITY_INSTRUCTION = `请只用几句简短的话概括情节要点和当下的情绪感受，不需要长篇大论——比如这种风格："女主角在第三章生气了，user想起了妈妈生气的样子，她不喜欢。"简洁、具体，情绪要落在实处，不要写成大段的抒情或总结陈词。`;
+
+// 生成"阅读摘要"的上下文拼装——悬浮球的"生成摘要"按钮和终评流程第一步（生成最终摘要）共用这一份逻辑，
+// 保证"生成摘要的上下文逻辑不变"：只是传入的 batch 不同（悬浮球传当前批次，终评传全书最后一个批次）
+async function buildSummaryMessages(batch){
+  const systemPrompt = await getSystemPrompt();
+  const memory = await getMemory();
+  const summary = currentBook.summary || '';
+
+  const chaptersSlice = currentBook.chapters.slice(batch.startIdx, batch.endIdx + 1);
+  const chaptersText = chaptersSlice.map((ch, i)=>{
+    const realIdx = batch.startIdx + i;
+    const paraText = paragraphsToPlainText(ch.paragraphs, realIdx+1);
+    return `《${ch.title}》\n${paraText}`;
+  }).join('\n\n---\n\n');
+
+  let contextIntro = `以下是你们正在共读的这一批次（第${batch.startIdx+1}~${batch.endIdx+1}章）的完整背景，供你在接下来的实时对话中参考。\n\n`;
+  contextIntro += `【书名】${currentBook.title}${currentBook.author ? '　【作者】' + currentBook.author : ''}\n\n`;
+  if(memory) contextIntro += `【记忆】\n${memory}\n\n`;
+  if(summary) contextIntro += `【目前为止的阅读摘要】\n${summary}\n\n`;
+  contextIntro += `【本批次章节原文】\n${chaptersText}\n\n`;
+  contextIntro += `【你之前为这一批次写下的批注与心得】\n${batch.annotationText}\n\n`;
+  contextIntro += `接下来是user在这一批次里跟你的实时对话，请延续温柔、专注的语气自然回应，不需要重复背景内容。`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: contextIntro },
+    { role: 'assistant', content: '好，我在这里，读完了这几章，也想好好听你说说话。' },
+  ];
+
+  const history = batch.chatHistory || [];
+  history.forEach(msg=>{
+    const prefix = msg.locatorLabel ? `[📍${msg.locatorLabel}] ` : '';
+    messages.push({ role: msg.role === 'me' ? 'user' : 'assistant', content: prefix + msg.text });
+  });
+
+  // 追加的是"生成摘要"这个一次性指令，不代表user说了这句话，所以不会、也不该存进 chatHistory
+  const brevityInstruction = await getBrevityInstruction();
+  const summaryInstruction = `以上是你们目前为止共读的全部背景。请基于这些内容——包括之前的阅读摘要（如果有）和这一批次刚读完的内容——重新写一份完整、连贯的阅读摘要，覆盖到目前为止读过的全部情节进展、人物关系和关键事件，好让接下来读新的章节时，只凭这份摘要就能完整接上前面的故事，不需要再重复读过的原文细节。${brevityInstruction}不要写成聊天回复或批注的语气，也不需要任何寒暄或称呼。`;
+  messages.push({ role: 'user', content: summaryInstruction });
+
+  return messages;
+}
+
+// ---------- 书架渲染 ----------
+async function renderShelf(){
+  const books = await idbGetAll('books');
+  const list = document.getElementById('shelfList');
+  if(!books.length){
+    list.innerHTML = `<div class="empty-state">
+      <div class="icon">📖</div>
+      还没有书。点右下角 ＋ 上传第一本 txt。
+    </div>`;
+    return;
+  }
+  books.sort((a,b)=> b.updatedAt - a.updatedAt);
+  list.innerHTML = books.map(b=>{
+    const totalCh = b.chapters.length;
+    const readCh = b.annotatedChapters ? b.annotatedChapters.length : 0;
+    const pct = totalCh ? Math.round(readCh/totalCh*100) : 0;
+    return `<div class="book-card" data-id="${b.id}">
+      <div class="book-spine"></div>
+      <div class="book-info">
+        <div class="title">${escapeHtml(b.title)}</div>
+        <div class="meta">${b.author ? escapeHtml(b.author)+' · ' : ''}已读 ${readCh}/${totalCh} 章</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.book-card').forEach(card=>{
+    card.addEventListener('click', ()=> openBook(card.dataset.id));
+  });
+}
+
+// paragraphs 数组转发给AI的纯文本，跳过图片占位项（deepseek是纯文本模型，图片不进prompt）。
+// 段落编号用原始索引 pi+1，不因跳过图片而重新计数——这样"第N段"在AI眼里和在页面data-pidx渲染里
+// 指向的是同一个自然段，批注定位的锚点不会错位。
+function paragraphsToPlainText(paragraphs, chapterNum){
+  return paragraphs
+    .map((p, pi)=> ({ p, pi }))
+    .filter(({p})=> typeof p === 'string')
+    .map(({p, pi})=> `[第${chapterNum}章第${pi+1}段] ${p}`)
+    .join('\n');
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- 打开一本书 → 目录页 ----------
+async function openBook(bookId){
+  currentBookId = bookId;
+  currentBook = await idbGet('books', bookId);
+  if(!currentBook){ showToast('未找到这本书'); return; }
+
+  document.getElementById('tocTitle').textContent = currentBook.title;
+  document.getElementById('tocSub').textContent = (currentBook.author ? currentBook.author + ' · ' : '') + currentBook.chapters.length + ' 章';
+
+  renderToc();
+  setupBatchSlider();
+  switchView('view-toc');
+}
+
+function renderToc(){
+  const annotatedSet = new Set(currentBook.annotatedChapters || []);
+  const list = document.getElementById('tocList');
+  list.innerHTML = currentBook.chapters.map((ch, idx)=>{
+    let statusHtml = '<span class="toc-status status-unread">我们还没看</span>';
+    if(annotatedSet.has(idx)) statusHtml = '<span class="toc-status status-annotated">小狗到此一游😼</span>';
+    return `<div class="toc-item" data-idx="${idx}">
+      <div class="toc-num">${idx+1}</div>
+      <div class="toc-title">${escapeHtml(ch.title)}</div>
+      ${statusHtml}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.toc-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const idx = parseInt(item.dataset.idx, 10);
+      openReaderAtChapter(idx);
+    });
+  });
+
+  renderFinishedBanner(annotatedSet);
+}
+
+// 全书读完横幅：三种状态——还没读完(不显示)、已全部生成批注但还没生成终稿书评(显示CTA)、
+// 已经生成过终稿书评(显示"已读完"入口，可查看/可重新生成)
+function renderFinishedBanner(annotatedSet){
+  const banner = document.getElementById('finishedBanner');
+  const totalCh = currentBook.chapters.length;
+  const isFullyAnnotated = totalCh > 0 && annotatedSet.size === totalCh;
+
+  if(!isFullyAnnotated){
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+
+  banner.style.display = 'block';
+  if(currentBook.finished){
+    banner.classList.add('done');
+    banner.innerHTML = `
+      <div class="fb-text">亲爱的塞西莉娅，我们的缘分未尽。${getFinalBannerEmoji()}</div>
+      <button id="btnViewFinalReview">去看看与妻书</button>
+    `;
+    document.getElementById('btnViewFinalReview').addEventListener('click', ()=> openFinalReviewSheet(false));
+  } else {
+    banner.classList.remove('done');
+    banner.innerHTML = `
+      <div class="fb-text">点击这个，我们就又读完了一本书！</div>
+      <button id="btnGenFinalReview">生成终评</button>
+    `;
+    document.getElementById('btnGenFinalReview').addEventListener('click', ()=> openFinalReviewSheet(true));
+  }
+}
+
+// ---------- 小狗日后谈：书摘展示（好句子 / 心得，按最新在前排列）----------
+let bookmarksActiveTab = 'good';
+
+document.getElementById('btnBookmarks').addEventListener('click', openBookmarksPage);
+
+async function openBookmarksPage(){
+  if(!currentBook){ showToast('请先从书架进入一本书'); return; }
+  document.getElementById('bookmarksSub').textContent = currentBook.title;
+  bookmarksActiveTab = 'good';
+  document.querySelectorAll('.bookmarks-tab').forEach(t=> t.classList.toggle('active', t.dataset.tab === 'good'));
+  await renderBookmarksPage();
+  switchView('view-bookmarks');
+}
+
+document.querySelectorAll('.bookmarks-tab').forEach(tab=>{
+  tab.addEventListener('click', async ()=>{
+    bookmarksActiveTab = tab.dataset.tab;
+    document.querySelectorAll('.bookmarks-tab').forEach(t=> t.classList.toggle('active', t === tab));
+    await renderBookmarksPage();
+  });
+});
+
+async function renderBookmarksPage(){
+  const body = document.getElementById('bookmarksBody');
+  if(!currentBook){ body.innerHTML = ''; return; }
+
+  const rec = await idbGet('meta', `bookmarks_${currentBook.id}`);
+  const list = rec ? (bookmarksActiveTab === 'good' ? (rec.goodLines || []) : (rec.thoughts || [])) : [];
+
+  if(list.length === 0){
+    body.innerHTML = `<div class="bookmarks-empty">${bookmarksActiveTab === 'good' ? '还没有攒下喜欢的句子呢🐾' : '还没有收到过信呢🐾'}</div>`;
+    return;
+  }
+
+  // 最新的排在最前面，方便看最近攒了什么
+  const sorted = list.slice().sort((a,b)=> b.at - a.at);
+
+  if(bookmarksActiveTab === 'good'){
+    body.innerHTML = sorted.map(item=>{
+      const sourceLabel = item.source === 'manual' ? '🤍' : '🩶';
+      return `<div class="bookmark-card">
+        <div class="bm-text">${escapeHtml(item.text)}</div>
+        <div class="bm-meta"><span>${escapeHtml(item.range || '')}</span><span>${sourceLabel} · ${formatTimeStamp(item.at)}</span></div>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  // 与妻书：书信体，独立于其它页面的展示形式
+  const identity = await getChatIdentity();
+  body.innerHTML = sorted.map(item=> renderLetterCardHtml(item, identity)).join('');
+  bindLetterCardEvents();
+}
+
+// ---------- 与妻书：书信体互动 ----------
+
+const fetchingLetters = new Set(); // 记录哪些信件正在等AI回信（entry.at 的集合），跨重渲染保持状态
+
+function letterBlockHtml(role, name, text, at, tokenInfo){
+  const tokensHtml = tokenInfo
+    ? `<span class="lf-tokens">${tokenInfo.total} tokens${tokenInfo.hit ? ' / ' + tokenInfo.hit + ' cached' : ''}</span>`
+    : '';
+  return `<div class="letter-block ${role==='user' ? 'user' : ''}">
+    <div class="letter-name"><span class="letter-dot"></span>${escapeHtml(name)}：</div>
+    <div class="letter-body">${escapeHtml(text)}</div>
+    <div class="letter-footer"><span class="lf-date">${formatLetterDate(at)}</span>${tokensHtml}</div>
+  </div>`;
+}
+
+function renderLetterCardHtml(entry, identity){
+  const blocks = [ letterBlockHtml('char', identity.charName, entry.text, entry.at, entry.tokenInfo) ];
+  (entry.replies || []).forEach(r=>{
+    blocks.push(letterBlockHtml(r.role, r.role === 'char' ? identity.charName : identity.myName, r.text, r.at, r.tokenInfo));
+  });
+
+  const lastRole = (entry.replies && entry.replies.length) ? entry.replies[entry.replies.length-1].role : 'char';
+  const isFetching = fetchingLetters.has(entry.at);
+
+  let tailHtml;
+  if(lastRole === 'char'){
+    // 上一封是AI写的，轮到user回信
+    tailHtml = `<div class="letter-reply-row">
+        <button class="letter-reply-btn" data-entry-at="${entry.at}">✎ 回信</button>
+      </div>
+      <div class="letter-compose" id="compose-${entry.at}" style="display:none;">
+        <div class="letter-name user"><span class="letter-dot"></span>${escapeHtml(identity.myName)}：</div>
+        <textarea placeholder="写点什么给他吧…"></textarea>
+        <div class="lc-actions">
+          <button class="lc-cancel" data-cancel-at="${entry.at}">算了</button>
+          <button class="lc-submit" data-submit-at="${entry.at}">寄出这封信</button>
+        </div>
+      </div>`;
+  } else if(isFetching){
+    // 正在等AI的回信
+    tailHtml = `<div class="letter-loading">🐳✍️ 信正在路上，等一等…</div>`;
+  } else {
+    // 轮到AI回信，但上次没等到（比如失败了/中途关掉了页面），给一个手动重试入口
+    tailHtml = `<div class="letter-reply-row">
+        <button class="letter-retry-btn" data-entry-at="${entry.at}">🐳✍️ 小狗想要一封信！</button>
+      </div>`;
+  }
+
+  const kindLabel = entry.kind === 'final' ? '终稿来信' : '日常来信';
+  const rangeLabel = entry.range || '';
+
+  return `<div class="letter-card" data-entry-at="${entry.at}">
+    <div class="letter-subtitle">今天小狗依旧不写信给我。这封信不要给小狗看。</div>
+    <div class="letter-meta">${escapeHtml(kindLabel)}${rangeLabel ? ' · ' + escapeHtml(rangeLabel) : ''}</div>
+    ${blocks.join('<hr class="letter-divider">')}
+    <hr class="letter-divider">
+    ${tailHtml}
+  </div>`;
+}
+
+function bindLetterCardEvents(){
+  document.querySelectorAll('.letter-reply-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const at = btn.dataset.entryAt;
+      document.getElementById(`compose-${at}`).style.display = 'block';
+      btn.parentElement.style.display = 'none';
+    });
+  });
+  document.querySelectorAll('.lc-cancel').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const at = btn.dataset.cancelAt;
+      const compose = document.getElementById(`compose-${at}`);
+      compose.style.display = 'none';
+      compose.previousElementSibling.style.display = 'block'; // 重新显示"✎ 回信"那一行
+    });
+  });
+  document.querySelectorAll('.lc-submit').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const at = Number(btn.dataset.submitAt);
+      const compose = document.getElementById(`compose-${at}`);
+      const textarea = compose.querySelector('textarea');
+      const text = textarea.value.trim();
+      if(!text) return;
+      btn.disabled = true;
+      await submitLetterReply(at, text);
+    });
+  });
+  document.querySelectorAll('.letter-retry-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const at = Number(btn.dataset.entryAt);
+      await fetchCharReply(at);
+    });
+  });
+}
+
+// user提交回信：落库、重渲染（此时轮到AI了，会显示"信正在路上"），再去请求AI的回信
+async function submitLetterReply(entryAt, replyText){
+  const rec = await idbGet('meta', `bookmarks_${currentBook.id}`);
+  const entry = (rec.thoughts || []).find(t=> t.at === entryAt);
+  if(!entry) return;
+
+  entry.replies = entry.replies || [];
+  entry.replies.push({ role:'user', text: replyText, at: Date.now() });
+  await idbPut('meta', rec);
+
+  await fetchCharReply(entryAt);
+}
+
+// 请求AI的回信：上下文固定是"系统提示词 + Memory + 这封信从头到尾的完整往来"
+async function fetchCharReply(entryAt){
+  fetchingLetters.add(entryAt);
+  await renderBookmarksPage();
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    fetchingLetters.delete(entryAt);
+    await renderBookmarksPage();
+    return;
+  }
+
+  try{
+    const rec = await idbGet('meta', `bookmarks_${currentBook.id}`);
+    const entry = (rec.thoughts || []).find(t=> t.at === entryAt);
+    if(!entry){ fetchingLetters.delete(entryAt); return; }
+
+    const systemPrompt = await getSystemPrompt();
+    const memory = await getMemory();
+
+    let introText = `以下是你之前写给user的一封信，请继续这段书信往来，语气和情感保持连贯。\n\n`;
+    if(memory) introText += `【记忆】\n${memory}\n\n`;
+    introText += `这是你写的那封信的正文：`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: introText },
+      { role: 'assistant', content: entry.text },
+    ];
+    (entry.replies || []).forEach(r=>{
+      messages.push({ role: r.role === 'user' ? 'user' : 'assistant', content: r.text });
+    });
+    messages.push({ role: 'user', content: `请回信。${await getBrevityInstruction()}直接给出信件正文，不需要称呼和落款。` });
+
+    const { replyText: charReply, totalTokens, hitTokens } = await callDeepSeekWithUsage(messages);
+
+    entry.replies.push({ role:'char', text: charReply, at: Date.now(), tokenInfo: { total: totalTokens, hit: hitTokens } });
+    await idbPut('meta', rec);
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){
+      showToast('请先在小狗爪印🐾里填写 API Key');
+    } else {
+      showToast('信寄丢了，请检查网络或 API Key 是否正确');
+    }
+  } finally {
+    fetchingLetters.delete(entryAt);
+    await renderBookmarksPage();
+  }
+}
+
+// ---------- 终稿书评弹层：生成 / 查看 / 确认标记读完并同步进 Memory ----------
+const finalReviewOverlay = document.getElementById('finalReviewOverlay');
+const finalReviewSheet = document.getElementById('finalReviewSheet');
+finalReviewOverlay.addEventListener('click', ()=>{
+  finalReviewOverlay.classList.remove('active');
+  finalReviewSheet.classList.remove('active');
+});
+
+async function openFinalReviewSheet(shouldGenerate){
+  if(!shouldGenerate){
+    // 已经读完过，这次只是想再回去看看信——直接带去"与妻书"，不再重新走生成流程
+    bookmarksActiveTab = 'thought';
+    await openBookmarksPage();
+    document.querySelectorAll('.bookmarks-tab').forEach(t=> t.classList.toggle('active', t.dataset.tab === 'thought'));
+    await renderBookmarksPage();
+    return;
+  }
+  finalReviewOverlay.classList.add('active');
+  finalReviewSheet.classList.add('active');
+  await generateSummaryStage();
+}
+
+// 第一步：生成"最终摘要"——和悬浮球"生成摘要"用的是同一套上下文逻辑（buildSummaryMessages不变），
+// 只是这里传入全书最后一个批次，确认后写入 book.summary 并同步进 Memory
+async function generateSummaryStage(){
+  const body = document.getElementById('finalReviewBody');
+  const footer = document.getElementById('finalReviewFooter');
+  body.innerHTML = `<div class="final-review-loading">🐳✍️<br>🐶：你写完了吗？</div>`;
+  footer.innerHTML = '';
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    body.innerHTML = `<div class="final-review-loading">还没填 API Key，没法生成。</div>`;
+    return;
+  }
+
+  try{
+    const allBatches = (await idbGetAll('batches'))
+      .filter(b=> b.bookId === currentBook.id)
+      .sort((a,b)=> b.endIdx - a.endIdx);
+    const lastBatch = allBatches[0];
+    if(!lastBatch){
+      showToast('还没有任何批次记录，没法生成摘要');
+      return;
+    }
+
+    const messages = await buildSummaryMessages(lastBatch);
+    const { replyText } = await callDeepSeekWithUsage(messages);
+
+    body.innerHTML = `
+      <div class="final-review-stage-label">第一步 · 最终摘要（可以先改一改，确认后会写进记忆）</div>
+      <textarea class="final-review-textarea" id="summaryStageInput" rows="8">${escapeHtml(replyText)}</textarea>
+    `;
+    footer.innerHTML = `<div class="final-review-footer-row">
+      <button class="btn-regen" id="btnRegenStage">我们再来试一次</button>
+      <button class="btn-accept" id="btnAcceptStage">确认，写入记忆</button>
+    </div>`;
+
+    document.getElementById('btnRegenStage').addEventListener('click', generateSummaryStage);
+    document.getElementById('btnAcceptStage').addEventListener('click', async ()=>{
+      const finalSummary = document.getElementById('summaryStageInput').value.trim() || replyText;
+      currentBook.summary = finalSummary;
+      currentBook.updatedAt = Date.now();
+      await idbPut('books', currentBook);
+      // 这一刻才真正写进 Memory——阅读过程中每个批次的滚动摘要更新，都不会碰 Memory
+      await syncBookIntoMemory(currentBook);
+      showToast('最终摘要已经写进记忆了🐾');
+      await generateInsightStage();
+    });
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){ showToast('请先在小狗爪印🐾里填写 API Key'); }
+    else { showToast('生成失败，请检查网络或 API Key 是否正确'); }
+    body.innerHTML = `<div class="final-review-loading">生成失败了，要不再试一次？</div>`;
+    footer.innerHTML = `<div class="final-review-footer-row">
+      <button class="btn-regen" id="btnRegenStage">我们再来试一次</button>
+    </div>`;
+    document.getElementById('btnRegenStage').addEventListener('click', generateSummaryStage);
+  }
+}
+
+// 第二步：生成"心得"（与妻书）——上下文只有系统提示词+Memory（此时Memory已经包含了第一步刚写入的最终摘要），
+// 不再重复塞批注原文，确认后作为一条新的书信存进 bookmarks 的 thoughts 里
+async function generateInsightStage(){
+  const body = document.getElementById('finalReviewBody');
+  const footer = document.getElementById('finalReviewFooter');
+  body.innerHTML = `<div class="final-review-loading">🐳✍️<br>🐶：你写完了吗？</div>`;
+  footer.innerHTML = '';
+
+  try{
+    const messages = await buildInsightMessages();
+    const { replyText: rawReplyText, totalTokens, hitTokens } = await callDeepSeekWithUsage(messages);
+    // 终评信是独立的正式书信，不该带有 [好句子][心得] 或 "**我最想对你说的话：**" 这类
+    // 批注阶段专用的格式标记词，万一模型顺手带出来了，这里统一清掉，预览和实际存储都用这份干净文本
+    const replyText = cleanFinalLetterText(rawReplyText);
+
+    body.innerHTML = `
+      <div class="final-review-stage-label">第二步 · 与妻书（不满意可以点"我们再来试一次"重新生成）</div>
+      <div class="final-review-text">${escapeHtml(replyText)}</div>
+    `;
+    footer.innerHTML = `<div class="final-review-footer-row">
+      <button class="btn-regen" id="btnRegenStage">我们再来试一次</button>
+      <button class="btn-accept" id="btnAcceptStage">这是我喜欢的结局！</button>
+    </div>`;
+
+    document.getElementById('btnRegenStage').addEventListener('click', generateInsightStage);
+    document.getElementById('btnAcceptStage').addEventListener('click', async ()=>{
+      const rec = await idbGet('meta', `bookmarks_${currentBook.id}`) || { key:`bookmarks_${currentBook.id}`, goodLines:[], thoughts:[] };
+      rec.thoughts = rec.thoughts || [];
+      rec.thoughts.push({
+        text: replyText,
+        at: Date.now(),
+        range: '全书终稿',
+        source: 'ai',
+        kind: 'final',
+        tokenInfo: { total: totalTokens, hit: hitTokens },
+        replies: [],
+      });
+      await idbPut('meta', rec);
+
+      currentBook.finished = true;
+      currentBook.updatedAt = Date.now();
+      await idbPut('books', currentBook);
+
+      showToast('亲爱的塞西莉娅，我们的缘分未尽。');
+      finalReviewOverlay.classList.remove('active');
+      finalReviewSheet.classList.remove('active');
+      renderToc();
+      await renderShelf();
+    });
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){ showToast('请先在小狗爪印🐾里填写 API Key'); }
+    else { showToast('生成失败，请检查网络或 API Key 是否正确'); }
+    body.innerHTML = `<div class="final-review-loading">生成失败了，要不再试一次？</div>`;
+    footer.innerHTML = `<div class="final-review-footer-row">
+      <button class="btn-regen" id="btnRegenStage">我们再来试一次</button>
+    </div>`;
+    document.getElementById('btnRegenStage').addEventListener('click', generateInsightStage);
+  }
+}
+
+// 生成"心得/与妻书"的上下文——固定只有系统提示词 + Memory，不带批注原文
+async function buildInsightMessages(){
+  const systemPrompt = await getSystemPrompt();
+  const memory = await getMemory();
+
+  let userContent = `你们刚刚一起读完了《${currentBook.title}》${currentBook.author ? '　' + currentBook.author : ''}。\n\n`;
+  if(memory) userContent += `【记忆】\n${memory}\n\n`;
+  userContent += `请写一段完整的终稿心得——这是你想对user说的一段真心话，作为读完这本书的郑重收尾，可以用书信的口吻。${await getBrevityInstruction()}直接给出信件正文，不需要称呼和落款（称呼和日期会由程序自动加上）。`;
+
+  return [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userContent }
+  ];
+}
+
+// ---------- 批次滑块 ----------
+function setupBatchSlider(){
+  const totalCh = currentBook.chapters.length;
+  const slider = document.getElementById('batchSlider');
+  slider.min = 1; slider.max = totalCh; slider.value = Math.min(3, totalCh);
+  updateBatchLabel();
+  slider.oninput = updateBatchLabel;
+}
+
+function updateBatchLabel(){
+  const totalCh = currentBook.chapters.length;
+  // 找到当前"还没有生成过批注"的起始章节（依据 annotatedChapters，这才是真实已生成的记录）
+  const annotatedSet = new Set(currentBook.annotatedChapters || []);
+  let startIdx = 0;
+  while(startIdx < totalCh && annotatedSet.has(startIdx)) startIdx++;
+  if(startIdx >= totalCh) startIdx = totalCh - 1;
+
+  const slider = document.getElementById('batchSlider');
+  const endCount = parseInt(slider.value, 10);
+  const endIdx = Math.min(startIdx + endCount - 1, totalCh - 1);
+
+  document.getElementById('batchRangeLabel').textContent =
+    `第${startIdx+1}章 ~ 第${endIdx+1}章`;
+  document.getElementById('btnGenerate').textContent =
+    `来吧（${endIdx-startIdx+1}章）`;
+
+  setupBatchSlider._range = { startIdx, endIdx };
+}
+
+// ---------- 展示层：按章节拆分批注文本（仅用于渲染，不改动原始存储） ----------
+// 约定 AI 在批注中，每章开头使用形如「## 【第X章：xxx】」或「【第X章】」的标记
+// 拆分只影响这一次渲染展示；数据库里 annotationText 始终保持 AI 返回的原始完整文本
+function splitAnnotationByChapter(rawText, startIdx, endIdx){
+  // 只识别"标题行"格式的章节标记：整行必须以 ## 或 【 开头（这是我们要求 AI 遵守的格式），
+  // 不认为任何"裸文字里恰好出现第X章"的行是标题，避免误判正文叙述
+  const headingLineRe = /^(?:##\s*【|【)\s*第\s*([0-9一二三四五六七八九十百千零〇]+)\s*章[^\n]{0,40}$/gm;
+
+  const cnNumMap = { 零:0, 一:1, 二:2, 三:3, 四:4, 五:5, 六:6, 七:7, 八:8, 九:9, 十:10 };
+  function cnToNum(s){
+    if(/^[0-9]+$/.test(s)) return parseInt(s, 10);
+    if(s.length === 1) return cnNumMap[s] ?? null;
+    if(s.includes('十')){
+      const parts = s.split('十');
+      const tens = parts[0] ? (cnNumMap[parts[0]] || 1) : 1;
+      const ones = parts[1] ? (cnNumMap[parts[1]] || 0) : 0;
+      return tens * 10 + ones;
+    }
+    return null;
+  }
+
+  const matches = [];
+  let m;
+  while((m = headingLineRe.exec(rawText)) !== null){
+    const num = cnToNum(m[1]);
+    if(num !== null){
+      matches.push({ chapterNum: num, index: m.index });
+    }
+  }
+
+  const result = {}; // { chapterIdx(0-based): text }
+  const usedGlobalNums = new Set(matches.map(x=>x.chapterNum));
+
+  // 只要识别到 >= 1 个严格格式的标题行，就认为可以拆分（标题行匹配本身已经很严格：
+  // 必须整行以 ## 【 或 【 开头，不会误判正文里偶然提到的"第X章"字样）
+  // 单章批次（比如只生成第2章）也应该能正常拆分，不该被"至少2个标题"这种门槛误伤
+  if(usedGlobalNums.size < 1){
+    return { success:false, byChapter:{}, fallbackText: rawText };
+  }
+
+  for(let i=0; i<matches.length; i++){
+    const start = matches[i].index;
+    const end = (i+1 < matches.length) ? matches[i+1].index : rawText.length;
+    const segment = rawText.slice(start, end).trim();
+    const chapterIdx0based = matches[i].chapterNum - 1; // 假设"第3章"标题对应 chapters[2]
+    if(chapterIdx0based >= startIdx && chapterIdx0based <= endIdx){
+      result[chapterIdx0based] = segment;
+    }
+  }
+
+  // 兜底：如果按模型写的数字一个都对不上批次范围（比如模型把原文自带的"Chapter N"当成了章节号，
+  // 或者干脆从1重新数），但识别到的标题行数量刚好等于这个批次应有的章节数，
+  // 就不再信模型写的数字，改成按"出现顺序"依次对应 startIdx、startIdx+1……——
+  // 顺序几乎不会错（模型是按原文顺序往下写的），错的只是数字本身。
+  const expectedCount = endIdx - startIdx + 1;
+  if(Object.keys(result).length === 0 && matches.length === expectedCount){
+    for(let i=0; i<matches.length; i++){
+      const start = matches[i].index;
+      const end = (i+1 < matches.length) ? matches[i+1].index : rawText.length;
+      const segment = rawText.slice(start, end).trim();
+      result[startIdx + i] = segment;
+    }
+  }
+
+  return { success: Object.keys(result).length > 0, byChapter: result, fallbackText: rawText };
+}
+
+// 从某一章的批注片段中，尝试抠出"心得"部分（形如 **我最想对你说的话：** 之后的内容）独立展示
+function extractHeartFromSegment(segment){
+  const trimmedSegment = segment.trimEnd();
+  const heartRe = /(\*\*?我最想对你说的话[：:]\*\*?|【?我最想对你说的话】?[：:])([\s\S]*)$/;
+  const m = heartRe.exec(trimmedSegment);
+  if(m){
+    // 心得内容截止到下一个 "## " 或 "---" 分隔线（如果本章片段里恰好混入了下一章内容），否则到末尾
+    let heartRaw = m[2];
+    const cutRe = /\n(##|---)/;
+    const cutM = cutRe.exec(heartRaw);
+    if(cutM) heartRaw = heartRaw.slice(0, cutM.index);
+    const heart = heartRaw.trim();
+    const body = trimmedSegment.slice(0, m.index).trim();
+    return { body, heart: heart || null };
+  }
+  return { body: segment, heart: null };
+}
+
+// 从某一章的批注片段中，抽取"段落级批注"（[批注@第X段] 格式），
+// 返回 { paraAnnotations: {段落序号(1-based): [文本,...]}, remainingText: 去掉这些标记后剩下的文本 }
+// 仅用于展示层拆分，不改动存储的原始文本
+function extractParaAnnotations(segment, currentChapterNum1based){
+  // 兼容三种格式（优先按标准格式要求 AI 输出，这里是程序层兜底，防止 AI 偶尔不遵守约定）：
+  // 1) [批注@第X段]                标准格式
+  // 2) [批注@第X-Y段]              范围段落——AI 偶尔会偷懒把好几段的感想合并写成一条。
+  //    这里不再把同一句话重复贴到范围内每一段（那样会显得像bug：1-3段全是一模一样的批注），
+  //    改成只挂在范围的第一段，并在文字前加一个小标记，让用户一眼看出"这条批注其实覆盖了好几段"，
+  //    而不是误以为AI真的针对每一段单独写了感想
+  // 3) [批注@第N章第X段] 或 [批注@第N章第X-Y段]   带章节号的复合格式
+  //    只有当 N 等于当前章节号时才采用（避免跨章引用被错误地放进本章），否则整条丢弃
+  // 注：这里的 lookahead 除了遇到空行要停止捕获，遇到下一个 [批注@...] 标记也要停止——
+  // 否则AI连续写两条批注、中间没空行分隔时，第一条会把第二条也吞进自己的正文里（曾经真实存在的bug）
+  const re = /\[批注@第\s*(?:(\d+)\s*章)?\s*第?\s*(\d+)(?:\s*[-~]\s*(\d+))?\s*段\]\s*([^\n]*(?:\n(?!\s*\n|\s*\[批注@)[^\n]*)*)/g;
+  const paraAnnotations = {};
+  let m;
+  let matchedRanges = [];
+  while((m = re.exec(segment)) !== null){
+    const chapterNumInTag = m[1] ? parseInt(m[1], 10) : null;
+    const startPara = parseInt(m[2], 10);
+    const endPara = m[3] ? parseInt(m[3], 10) : startPara;
+    let text = m[4].trim();
+
+    matchedRanges.push([m.index, m.index + m[0].length]);
+
+    // 带章节号的标记，只有匹配当前章节才采纳；不带章节号的，视为默认指当前章
+    if(chapterNumInTag !== null && currentChapterNum1based !== undefined && chapterNumInTag !== currentChapterNum1based){
+      continue; // 引用的是别的章节，丢弃，不塞进本章展示
+    }
+
+    if(!text) continue;
+
+    if(endPara > startPara){
+      // 范围批注：只挂在第一段，加说明前缀，不重复贴到每一段
+      text = `（这段感想覆盖第${startPara}-${endPara}段）${text}`;
+      if(!paraAnnotations[startPara]) paraAnnotations[startPara] = [];
+      paraAnnotations[startPara].push(text);
+    } else {
+      if(!paraAnnotations[startPara]) paraAnnotations[startPara] = [];
+      paraAnnotations[startPara].push(text);
+    }
+  }
+  // 从原文本里移除已匹配的段落级批注（不管是否被采纳），剩下的作为章节级批注/心得文本
+  let remainingText = segment;
+  for(let i = matchedRanges.length - 1; i >= 0; i--){
+    const [s, e] = matchedRanges[i];
+    remainingText = remainingText.slice(0, s) + remainingText.slice(e);
+  }
+  remainingText = remainingText.replace(/\n{3,}/g, '\n\n').trim();
+  return { paraAnnotations, remainingText };
+}
+
+// 同一章可能被多条批次记录覆盖（比如整批次 + 后来单独重新生成的这一章）。
+// 规则：范围越窄（越具体）优先级越高，单章记录必然覆盖原批次记录。
+function findBatchForChapter(allBatches, bookId, chapterIdx){
+  const candidates = allBatches.filter(b=>
+    b.bookId === bookId && chapterIdx >= b.startIdx && chapterIdx <= b.endIdx
+  );
+  if(candidates.length === 0) return null;
+  candidates.sort((a,b)=> (a.endIdx - a.startIdx) - (b.endIdx - b.startIdx));
+  return candidates[0];
+}
+
+async function openReaderAtChapter(chapterIdx){
+  const ch = currentBook.chapters[chapterIdx];
+  document.getElementById('readerTitle').textContent = ch.title;
+  const textParaCount = ch.paragraphs.filter(p=> typeof p === 'string').length;
+  document.getElementById('readerSub').textContent = `第${chapterIdx+1}章 · 共${textParaCount}段`;
+
+  // 本章涉及的图片占位项，批量查出来建立 imageId -> dataURL 映射，供渲染时同步取用
+  const imageIdsInChapter = ch.paragraphs.filter(p=> p && p.type === 'image').map(p=> p.imageId);
+  const chapterImageMap = {};
+  for(const imgId of imageIdsInChapter){
+    const imgRecord = await idbGet('images', imgId);
+    if(imgRecord) chapterImageMap[imgId] = imgRecord.data;
+  }
+
+  // 查找覆盖这一章、范围最具体的批次记录
+  const allBatches = await idbGetAll('batches');
+  const matchedBatch = findBatchForChapter(allBatches, currentBook.id, chapterIdx);
+  currentReaderBatchKey = matchedBatch ? matchedBatch.key : null;
+  currentReaderChapterIdx = chapterIdx;
+
+  const btnRegen = document.getElementById('btnRegenChapter');
+  btnRegen.classList.toggle('show', !!matchedBatch);
+
+  const body = document.getElementById('readerBody');
+  let paraAnnotations = {}; // { 段落序号(1-based): [文本,...] }
+  let annotationHtml;
+  if(matchedBatch){
+    const split = splitAnnotationByChapter(matchedBatch.annotationText, matchedBatch.startIdx, matchedBatch.endIdx);
+    if(split.success && split.byChapter[chapterIdx] !== undefined){
+      const { paraAnnotations: pa, remainingText } = extractParaAnnotations(split.byChapter[chapterIdx], chapterIdx + 1);
+      paraAnnotations = pa;
+      const { body: annBody, heart } = extractHeartFromSegment(remainingText);
+      annotationHtml = '';
+      // annBody 如果只剩下章节标题行本身（比如 "## 【第8章：xxx】"），说明这一章所有实质内容
+      // 都已经被段落批注和心得抽走了，不该把这行标题单独当作"批注正文"展示出来
+      const annBodyIsJustHeading = annBody && /^#{0,2}\s*【?第\s*[0-9一二三四五六七八九十百千零〇]+\s*章[^\n]{0,40}】?$/.test(annBody.trim());
+      if(annBody && !annBodyIsJustHeading){
+        annotationHtml += `<div class="chapter-heart">
+          <div class="tag">📖 我予你缄默的情书（第${matchedBatch.startIdx+1}~${matchedBatch.endIdx+1}章批次）</div>
+          ${escapeHtml(annBody).replace(/\n/g,'<br>')}
+        </div>`;
+      }
+      if(heart){
+        annotationHtml += `<div class="chapter-heart" style="border-color:var(--accent); background:var(--note-bg);">
+          <div class="tag" style="color:var(--accent);">💌 小狗，听我说</div>
+          ${escapeHtml(heart).replace(/\n/g,'<br>')}
+        </div>`;
+      }
+    } else {
+      // 拆分失败：明确提示，展示完整批次原文，不猜测、不静默出错
+      annotationHtml = `<div class="chapter-heart">
+        <div class="tag">📖 重置我，让我再一次看见你（第${matchedBatch.startIdx+1}~${matchedBatch.endIdx+1}章批次 · 未能按章拆分，显示本批次完整内容）</div>
+        ${escapeHtml(matchedBatch.annotationText).replace(/\n/g,'<br>')}
+      </div>`;
+    }
+  } else {
+    annotationHtml = `<div class="annotation-placeholder">
+      💡 这一章的批注还没有生成。回到目录页，用「选择阅读批次」把这一章包含进去，点击生成，你不在我身边时，我在你的下一句诗里。
+    </div>`;
+  }
+
+  function paraAnnotationHtml(paraNum1based){
+    const items = paraAnnotations[paraNum1based];
+    if(!items || !items.length) return '';
+    return items.map(text=> `<div class="annotation-block">
+      <div class="tag">🐾 小狗，看这里</div>
+      ${escapeHtml(text).replace(/\n/g,'<br>')}
+    </div>`).join('');
+  }
+
+  const totalChapters = currentBook.chapters.length;
+  const hasPrev = chapterIdx > 0;
+  const hasNext = chapterIdx < totalChapters - 1;
+  const chapterNavHtml = `<div class="chapter-nav">
+    <div class="chapter-nav-btn ${hasPrev ? '' : 'disabled'}" id="btnPrevChapter">
+      <span>‹ 上一章</span>
+      ${hasPrev ? `<span class="cn-label">${escapeHtml(currentBook.chapters[chapterIdx-1].title)}</span>` : ''}
+    </div>
+    <div class="chapter-nav-btn ${hasNext ? '' : 'disabled'}" id="btnNextChapter">
+      <span>下一章 ›</span>
+      ${hasNext ? `<span class="cn-label">${escapeHtml(currentBook.chapters[chapterIdx+1].title)}</span>` : ''}
+    </div>
+  </div>`;
+
+  body.innerHTML = `<div class="chapter-block">
+    <h2>${escapeHtml(ch.title)}</h2>
+    ${ch.paragraphs.map((p,i)=>{
+      if(p && p.type === 'image'){
+        const src = chapterImageMap[p.imageId];
+        if(!src) return ''; // 图片记录丢失（极少数情况），静默跳过，不打断整章渲染
+        return `<div class="para para-image" data-cidx="${chapterIdx}" data-pidx="${i}">
+          <img src="${src}" alt="插图" style="max-width:100%; border-radius:8px; display:block; margin:12px 0;">
+        </div>`;
+      }
+      return `<div class="para" data-cidx="${chapterIdx}" data-pidx="${i}">
+      <span class="pnum">${i+1}</span>${escapeHtml(p)}
+    </div>${paraAnnotationHtml(i+1)}`;
+    }).join('')}
+    ${annotationHtml}
+    ${chapterNavHtml}
+  </div>`;
+
+  if(hasPrev){
+    document.getElementById('btnPrevChapter').addEventListener('click', ()=> openReaderAtChapter(chapterIdx - 1));
+  }
+  if(hasNext){
+    document.getElementById('btnNextChapter').addEventListener('click', ()=> openReaderAtChapter(chapterIdx + 1));
+  }
+
+  // 点击段落 → 标记为定位点（为悬浮球做准备）。图片段落跳过：图片不进AI上下文，标记它没有意义
+  body.querySelectorAll('.para:not(.para-image)').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      body.querySelectorAll('.para.marked').forEach(x=>x.classList.remove('marked'));
+      p.classList.add('marked');
+      const cidx = parseInt(p.dataset.cidx,10);
+      const pidx = parseInt(p.dataset.pidx,10);
+      currentLocator = { chapterIdx: cidx, paraIdx: pidx, label: `第${cidx+1}章第${pidx+1}段` };
+      showToast(`已定位：${currentLocator.label}，可点击悬浮球讨论`);
+    });
+  });
+
+  switchView('view-reader');
+}
+
+// ---------- 上传流程 ----------
+const uploadOverlay = document.getElementById('uploadOverlay');
+const uploadSheet = document.getElementById('uploadSheet');
+
+function openUploadSheet(){
+  uploadOverlay.classList.add('active');
+  uploadSheet.classList.add('active');
+}
+function closeUploadSheet(){
+  uploadOverlay.classList.remove('active');
+  uploadSheet.classList.remove('active');
+  document.getElementById('fileInput').value = '';
+  document.getElementById('epubFileInput').value = '';
+  document.getElementById('uploadFileNameTxt').textContent = '';
+  document.getElementById('uploadFileNameEpub').textContent = '';
+  document.getElementById('bookTitleInput').value = '';
+  document.getElementById('bookAuthorInput').value = '';
+  document.getElementById('btnConfirmUpload').disabled = true;
+  pendingUploadText = null;
+  pendingUploadType = null;
+  pendingUploadChapters = null;
+  pendingUploadImages = null;
+}
+
+document.getElementById('btnOpenUpload').addEventListener('click', openUploadSheet);
+uploadOverlay.addEventListener('click', closeUploadSheet);
+
+// ---------- 首页三个入口 ----------
+document.getElementById('btnGoShelf').addEventListener('click', ()=> switchView('view-shelf'));
+
+document.getElementById('btnGoSettingsHome').addEventListener('click', ()=> switchView('view-settings'));
+
+document.getElementById('btnGoBookmarksHome').addEventListener('click', openBookmarksPage);
+
+document.getElementById('uploadZone').addEventListener('click', ()=>{
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  pendingUploadFileName = file.name;
+  pendingUploadType = 'txt';
+  pendingUploadChapters = null;
+  pendingUploadImages = null;
+  document.getElementById('uploadFileNameEpub').textContent = '';
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    pendingUploadText = ev.target.result;
+    document.getElementById('uploadFileNameTxt').textContent = `已选择：${file.name}（${(file.size/1024).toFixed(1)} KB）`;
+    document.getElementById('bookTitleInput').value = guessTitleFromFilename(file.name);
+    document.getElementById('btnConfirmUpload').disabled = false;
+  };
+  reader.onerror = ()=> showToast('文件读取失败，请重试');
+  reader.readAsText(file, 'UTF-8');
+});
+
+document.getElementById('uploadZoneEpub').addEventListener('click', ()=>{
+  document.getElementById('epubFileInput').click();
+});
+
+document.getElementById('epubFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  pendingUploadFileName = file.name;
+  pendingUploadType = 'epub';
+  pendingUploadText = null;
+  document.getElementById('uploadFileNameTxt').textContent = '';
+  document.getElementById('uploadFileNameEpub').textContent = `正在解析：${file.name}…`;
+  document.getElementById('btnConfirmUpload').disabled = true;
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const parsed = await parseEpub(arrayBuffer);
+    pendingUploadChapters = parsed.chapters;
+    pendingUploadImages = parsed.images;
+    document.getElementById('uploadFileNameEpub').textContent = `已选择：${file.name}（${(file.size/1024).toFixed(1)} KB，识别出 ${parsed.chapters.length} 章）`;
+    document.getElementById('bookTitleInput').value = parsed.title || guessTitleFromFilename(file.name.replace(/\.epub$/i, ''));
+    if(parsed.author) document.getElementById('bookAuthorInput').value = parsed.author;
+    document.getElementById('btnConfirmUpload').disabled = false;
+  }catch(err){
+    console.error('epub解析失败', err);
+    document.getElementById('uploadFileNameEpub').textContent = '';
+    showToast('epub 解析失败，请确认文件是否完整');
+    pendingUploadType = null;
+  }
+});
+
+document.getElementById('btnConfirmUpload').addEventListener('click', async ()=>{
+  const isEpub = pendingUploadType === 'epub';
+  if(isEpub && !pendingUploadChapters) return;
+  if(!isEpub && !pendingUploadText) return;
+
+  const btn = document.getElementById('btnConfirmUpload');
+  btn.disabled = true; btn.textContent = isEpub ? '正在写入…' : '正在分章分段…';
+
+  await new Promise(r=>setTimeout(r, 50)); // 让 loading 文案先渲染
+
+  const chapters = isEpub ? pendingUploadChapters : parseChapters(pendingUploadText);
+  const title = document.getElementById('bookTitleInput').value.trim() || guessTitleFromFilename(pendingUploadFileName);
+  const author = document.getElementById('bookAuthorInput').value.trim();
+
+  // bookOrder：导入顺序，用于 Memory 跨书叠加时固定排序。先回填老书籍（可能是这个功能上线前导入的），
+  // 再取当前最大值+1 给这本新书
+  const existingBooks = await idbGetAll('books');
+  const changedOldBooks = ensureBookOrders(existingBooks);
+  for(const b of changedOldBooks) await idbPut('books', b);
+  const nextBookOrder = existingBooks.length
+    ? Math.max(...existingBooks.map(b=>b.bookOrder)) + 1
+    : 0;
+
+  const bookId = uid();
+
+  const book = {
+    id: bookId,
+    title, author,
+    chapters, // [{title, paragraphs:[]}]，epub 来源的段落数组里可能混入 {type:'image', imageId} 图片占位项
+    annotatedChapters: [],
+    bookOrder: nextBookOrder,
+    finished: false,
+    sourceType: isEpub ? 'epub' : 'txt',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  await idbPut('books', book);
+
+  // epub 图片这时才真正落库，绑定上刚生成的 bookId
+  if(isEpub && pendingUploadImages && pendingUploadImages.length){
+    for(const img of pendingUploadImages){
+      await idbPut('images', { id: img.id, bookId, mimeType: img.mimeType, data: img.data });
+    }
+  }
+
+  showToast(`导入成功：识别出 ${chapters.length} 章`);
+  closeUploadSheet();
+  await renderShelf();
+});
+
+// ---------- 批次生成按钮：真实调用 DeepSeek ----------
+document.getElementById('btnGenerate').addEventListener('click', async ()=>{
+  const range = setupBatchSlider._range;
+  const btn = document.getElementById('btnGenerate');
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    return;
+  }
+
+  // 保护：检查这批次范围里有没有章节已经生成过批注，避免误触重复调用 API
+  const annotatedSet = new Set(currentBook.annotatedChapters || []);
+  const alreadyDone = [];
+  for(let i = range.startIdx; i <= range.endIdx; i++){
+    if(annotatedSet.has(i)) alreadyDone.push(i+1);
+  }
+  if(alreadyDone.length > 0){
+    const ok = await showConfirm(`第${alreadyDone.join('、')}章 小狗已经来过了🐾\n再生成一次会覆盖之前的批注、并重新花一次 API 调用。\n确定要重新生成吗？`);
+    if(!ok) return;
+  }
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = '等一下啊，好饭不怕晚 •ᴗ•';
+
+  try{
+    const systemPrompt = await getSystemPrompt();
+    const memory = await getMemory();
+    const summary = currentBook.summary || '';
+
+    const chaptersSlice = currentBook.chapters.slice(range.startIdx, range.endIdx + 1);
+    const chaptersText = chaptersSlice.map((ch, i)=>{
+      const realIdx = range.startIdx + i;
+      const paraText = paragraphsToPlainText(ch.paragraphs, realIdx+1);
+      return `《${ch.title}》\n${paraText}`;
+    }).join('\n\n---\n\n');
+
+    let userContent = `以下是接下来要一起读的章节原文，请你逐章写批注和心得。\n\n`;
+    userContent += `【书名】${currentBook.title}${currentBook.author ? '　【作者】' + currentBook.author : ''}\n\n`;
+    if(memory) userContent += `【记忆】\n${memory}\n\n`;
+    if(summary) userContent += `【目前为止的阅读摘要】\n${summary}\n\n`;
+    userContent += `【本次章节原文】\n${chaptersText}\n\n`;
+    userContent += `请逐段读下去，读到有感触的地方就用 [批注@第X段] 格式直接写在那里，密度不限，想到多少写多少。每章读完后，在末尾用"**我最想对你说的话：**"写一段读完整章的总体心得。直接开始写，不需要重复原文。`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent }
+    ];
+
+    const replyText = await callDeepSeek(messages);
+    const { goodLines, thoughts } = extractMarkedItems(replyText);
+    const cleanReply = stripMarkedItems(replyText);
+
+    // 存储本批次结果：整段回复先整体存下，展示时按章节做简单切分（若能匹配到就分章展示，匹配不到则整体展示在批次末尾）
+    const batchKey = `${currentBook.id}_batch_${range.startIdx}_${range.endIdx}`;
+    const batchRecord = {
+      key: batchKey,
+      bookId: currentBook.id,
+      startIdx: range.startIdx,
+      endIdx: range.endIdx,
+      annotationText: cleanReply,
+      chatHistory: [],
+      createdAt: Date.now(),
+    };
+    await idbPut('batches', batchRecord);
+
+    // 存书摘（小狗日后谈）
+    if(goodLines.length || thoughts.length){
+      const bookmarkRec = await idbGet('meta', `bookmarks_${currentBook.id}`) || { key:`bookmarks_${currentBook.id}`, goodLines:[], thoughts:[] };
+      goodLines.forEach(g=> bookmarkRec.goodLines.push({ text: g, at: Date.now(), range: `第${range.startIdx+1}-${range.endIdx+1}章`, source: 'ai' }));
+      thoughts.forEach(t=> bookmarkRec.thoughts.push({ text: t, at: Date.now(), range: `第${range.startIdx+1}-${range.endIdx+1}章`, source: 'ai', kind: 'daily' }));
+      await idbPut('meta', bookmarkRec);
+    }
+
+    // 标记这些章节为"小狗到此一游"
+    currentBook.annotatedChapters = currentBook.annotatedChapters || [];
+    for(let i = range.startIdx; i <= range.endIdx; i++){
+      if(!currentBook.annotatedChapters.includes(i)) currentBook.annotatedChapters.push(i);
+    }
+    currentBook.updatedAt = Date.now();
+    await idbPut('books', currentBook);
+
+    showToast('小狗，到你了');
+    renderToc();
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){
+      showToast('请先在小狗爪印🐾里填写 API Key');
+    } else {
+      showToast('生成失败，请检查网络或 API Key 是否正确');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
+// ---------- 单章重新生成：只用「初始上下文 + 这一章原文」，不牵动同批次其它章节 ----------
+document.getElementById('btnRegenChapter').addEventListener('click', async ()=>{
+  const chapterIdx = currentReaderChapterIdx;
+  if(chapterIdx === null || chapterIdx === undefined || !currentBook) return;
+  const ch = currentBook.chapters[chapterIdx];
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    return;
+  }
+
+  const ok = await showConfirm(`重新生成第${chapterIdx+1}章，会替换这一章现在的批注（不影响批次里其它章节）。\n这一章之前的悬浮球聊天记录会被保留下来，继续显示为历史。\n确定要重新生成吗？`);
+  if(!ok) return;
+
+  const btn = document.getElementById('btnRegenChapter');
+  btn.style.pointerEvents = 'none';
+  const originalText = btn.textContent;
+  btn.textContent = '…';
+
+  try{
+    const systemPrompt = await getSystemPrompt();
+    const memory = await getMemory();
+    const summary = currentBook.summary || '';
+
+    const paraText = paragraphsToPlainText(ch.paragraphs, chapterIdx+1);
+    const chaptersText = `《${ch.title}》\n${paraText}`;
+
+    let userContent = `以下是要单独重新读一遍的这一章原文，请你重新写一份批注和心得（不需要参考你之前对这一章写过的旧内容）。\n\n`;
+    userContent += `【书名】${currentBook.title}${currentBook.author ? '　【作者】' + currentBook.author : ''}\n\n`;
+    if(memory) userContent += `【记忆】\n${memory}\n\n`;
+    if(summary) userContent += `【目前为止的阅读摘要】\n${summary}\n\n`;
+    userContent += `【本次章节原文】\n${chaptersText}\n\n`;
+    userContent += `请逐段读下去，读到有感触的地方就用 [批注@第X段] 格式直接写在那里，密度不限，想到多少写多少。读完整章后，在末尾用"**我最想对你说的话：**"写一段读完整章的总体心得。直接开始写，不需要重复原文。`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent }
+    ];
+
+    const replyText = await callDeepSeek(messages);
+    const { goodLines, thoughts } = extractMarkedItems(replyText);
+    const cleanReply = stripMarkedItems(replyText);
+
+    // 这一章原本如果被某条更大范围的批次记录覆盖，把那条记录里已有的聊天记录整体继承过来，
+    // 作为历史痕迹保留（不筛选/不拆分——拆分需要精确判断每条消息属于哪一章，目前数据里没有这个粒度）。
+    const allBatchesForRegen = await idbGetAll('batches');
+    const oldMatched = findBatchForChapter(allBatchesForRegen, currentBook.id, chapterIdx);
+    const inheritedHistory = (oldMatched && oldMatched.chatHistory) ? oldMatched.chatHistory.slice() : [];
+
+    const batchKey = `${currentBook.id}_batch_${chapterIdx}_${chapterIdx}`;
+    const batchRecord = {
+      key: batchKey,
+      bookId: currentBook.id,
+      startIdx: chapterIdx,
+      endIdx: chapterIdx,
+      annotationText: cleanReply,
+      chatHistory: inheritedHistory,
+      createdAt: Date.now(),
+      regeneratedFrom: oldMatched ? oldMatched.key : null,
+    };
+    await idbPut('batches', batchRecord);
+
+    if(goodLines.length || thoughts.length){
+      const bookmarkRec = await idbGet('meta', `bookmarks_${currentBook.id}`) || { key:`bookmarks_${currentBook.id}`, goodLines:[], thoughts:[] };
+      goodLines.forEach(g=> bookmarkRec.goodLines.push({ text: g, at: Date.now(), range: `第${chapterIdx+1}章`, source: 'ai' }));
+      thoughts.forEach(t=> bookmarkRec.thoughts.push({ text: t, at: Date.now(), range: `第${chapterIdx+1}章`, source: 'ai', kind: 'daily' }));
+      await idbPut('meta', bookmarkRec);
+    }
+
+    currentBook.annotatedChapters = currentBook.annotatedChapters || [];
+    if(!currentBook.annotatedChapters.includes(chapterIdx)) currentBook.annotatedChapters.push(chapterIdx);
+    currentBook.updatedAt = Date.now();
+    await idbPut('books', currentBook);
+
+    showToast('这一章重新写好了');
+    await openReaderAtChapter(chapterIdx);
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){
+      showToast('请先在小狗爪印🐾里填写 API Key');
+    } else {
+      showToast('生成失败，请检查网络或 API Key 是否正确');
+    }
+  } finally {
+    btn.style.pointerEvents = '';
+    btn.textContent = originalText;
+  }
+});
+
+// ---------- 悬浮球：玻璃拟态聊天界面 ----------
+const chatOverlay = document.getElementById('chatOverlay');
+const chatSheet = document.getElementById('chatSheet');
+let chatIdentityCache = null; // 打开悬浮球时读一次，避免每条消息都查库
+
+function formatTimeStamp(ts){
+  const d = new Date(ts);
+  const yyyy = d.getFullYear();
+  const mm2 = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${yyyy}-${mm2}-${dd} ${hh}:${mm}`;
+}
+// 与妻书用的日期格式，比聊天时间戳更有书信感
+function formatLetterDate(ts){
+  const d = new Date(ts);
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+function avatarHtml(dataUrl, fallbackEmoji){
+  if(dataUrl) return `<img src="${dataUrl}">`;
+  return `<span>${fallbackEmoji}</span>`;
+}
+
+// role: 'me' | 'ai'；meta: { locatorLabel, totalTokens, hitTokens, reasoning, thinkMs, msgId }（都可选）
+// msgId: 若提供，会给消息容器和CoT内容/正文内容分别打上 data-id，供流式更新时直接定位DOM，不用整体重渲染
+function renderChatMessage(role, text, ts, meta = {}){
+  const identity = chatIdentityCache || DEFAULT_IDENTITY;
+  const isMe = role === 'me';
+  const name = isMe ? identity.myName : identity.charName;
+  const avatar = isMe ? identity.myAvatar : identity.charAvatar;
+  const fallbackEmoji = isMe ? '🙂' : '💭';
+  const idAttr = meta.msgId ? ` data-msg-id="${meta.msgId}"` : '';
+
+  const locatorHtml = meta.locatorLabel ? `<div class="chat-locator">📍 ${escapeHtml(meta.locatorLabel)}</div>` : '';
+  const cacheHitHtml = (isMe === false && meta.totalTokens != null && meta.hitTokens != null)
+    ? `<span class="chat-cache-hit">· ${meta.totalTokens} tokens / ${meta.hitTokens} cached</span>` : '';
+
+  // 思考耗时文案：有明确耗时就显示秒数，只有reasoning但还没算出耗时（比如老历史记录）就不显示秒数，只显示"深度思考"
+  const thinkLabel = (meta.thinkMs != null) ? `深度思考 (${(meta.thinkMs/1000).toFixed(1)}s)` : '深度思考';
+
+  // 深度思考展示框：只在AI消息且确实带有reasoning内容时出现，默认展开(open)
+  const cotHtml = (isMe === false && meta.reasoning)
+    ? `<div class="cot-box open">
+        <div class="cot-summary" onclick="this.parentElement.classList.toggle('open')">
+          <span class="cot-icon">💫</span><span class="cot-label">${thinkLabel}</span><span class="cot-caret">▾</span>
+        </div>
+        <div class="cot-content">${escapeHtml(meta.reasoning).replace(/\n/g,'<br>')}</div>
+      </div>`
+    : '';
+
+  return `<div class="chat-msg ${isMe ? 'me' : 'ai'}"${idAttr}>
+    <div class="chat-header">
+      <div class="chat-avatar">${avatarHtml(avatar, fallbackEmoji)}</div>
+      <div class="chat-name">${escapeHtml(name)}</div>
+    </div>
+    <div class="chat-body-wrap">
+      ${cotHtml}
+      <div class="chat-bubble">${locatorHtml}${escapeHtml(text).replace(/\n/g,'<br>')}</div>
+      <div class="chat-meta"><span>${formatTimeStamp(ts)}</span>${cacheHitHtml}</div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('btnFloatBall').addEventListener('click', async ()=>{
+  chatIdentityCache = await getChatIdentity();
+  renderChatLocator();
+
+  const cotOn = await getCotEnabled();
+  document.getElementById('btnToggleCot').classList.toggle('cot-on', cotOn);
+
+  const body = document.getElementById('chatBody');
+  const header = document.getElementById('chatHeaderText');
+
+  if(!currentReaderBatchKey){
+    // 还没有对应批次（这一章还没生成过批注），悬浮球无法展开真实对话
+    currentChatBatch = null;
+    header.textContent = '本批次对话';
+    document.getElementById('btnGenSummary').style.display = 'none';
+    document.getElementById('btnEndBatch').style.display = 'none';
+    body.innerHTML = `<div class="chat-msg ai">
+      <div class="chat-header">
+        <div class="chat-avatar">${avatarHtml(chatIdentityCache.charAvatar, '💭')}</div>
+        <div class="chat-name">${escapeHtml(chatIdentityCache.charName)}</div>
+      </div>
+      <div class="chat-body-wrap">
+        <div class="chat-bubble">这一章还没有生成批注，先回到目录页生成这一批次，才能在这里聊起来哦。</div>
+      </div>
+    </div>`;
+    chatOverlay.classList.add('active');
+    chatSheet.classList.add('active');
+    return;
+  }
+
+  currentChatBatch = await idbGet('batches', currentReaderBatchKey);
+  const endedSuffix = currentChatBatch.ended ? '（已结束 · 精简上下文）' : '';
+  header.textContent = `第${currentChatBatch.startIdx+1}~${currentChatBatch.endIdx+1}章 · 本批次对话${endedSuffix}`;
+  document.getElementById('btnGenSummary').style.display = currentChatBatch.ended ? 'none' : '';
+  document.getElementById('btnEndBatch').style.display = currentChatBatch.ended ? 'none' : '';
+
+  const history = currentChatBatch.chatHistory || [];
+  if(history.length === 0){
+    body.innerHTML = renderChatMessage(
+      'ai',
+      '这是这一批次的对话空间，读到哪里想聊聊，随时可以点段落定位，或者直接跟我说。',
+      Date.now()
+    );
+  } else {
+    body.innerHTML = history.map(msg=> renderChatMessage(
+      msg.role, msg.text, msg.at, { locatorLabel: msg.locatorLabel, totalTokens: msg.totalTokens, hitTokens: msg.hitTokens, reasoning: msg.reasoning, thinkMs: msg.thinkMs }
+    )).join('');
+  }
+  body.scrollTop = body.scrollHeight;
+
+  chatOverlay.classList.add('active');
+  chatSheet.classList.add('active');
+});
+chatOverlay.addEventListener('click', ()=>{
+  chatOverlay.classList.remove('active');
+  chatSheet.classList.remove('active');
+});
+
+// 深度思考开关：点击切换开/关，存入本地，下一次发消息生效（不影响已发出的历史消息）
+document.getElementById('btnToggleCot').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnToggleCot');
+  const nowOn = !btn.classList.contains('cot-on');
+  await setCotEnabled(nowOn);
+  btn.classList.toggle('cot-on', nowOn);
+  showToast(nowOn ? '深度思考已开启，回复会更慢一些' : '深度思考已关闭');
+});
+
+function renderChatLocator(){
+  const area = document.getElementById('locatorArea');
+  if(currentLocator){
+    area.innerHTML = `<div class="locator-tag">📍 ${currentLocator.label} <button id="btnClearLocator">✕</button></div>`;
+    document.getElementById('btnClearLocator').addEventListener('click', ()=>{
+      currentLocator = null;
+      renderChatLocator();
+    });
+  } else {
+    area.innerHTML = '';
+  }
+}
+
+document.getElementById('btnSendChat').addEventListener('click', async ()=>{
+  const input = document.getElementById('chatInput');
+  const val = input.value.trim();
+  if(!val) return;
+
+  if(!currentChatBatch){
+    showToast('这一章还没有生成批注，先去目录页生成这一批次吧');
+    return;
+  }
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    return;
+  }
+
+  const body = document.getElementById('chatBody');
+  const sendBtn = document.getElementById('btnSendChat');
+  const locatorLabel = currentLocator ? currentLocator.label : null;
+  const nowMe = Date.now();
+
+  // 立即展示我方消息，不等待API返回，交互更跟手
+  body.insertAdjacentHTML('beforeend', renderChatMessage('me', val, nowMe, { locatorLabel }));
+  input.value = '';
+  currentLocator = null;
+  renderChatLocator();
+  body.scrollTop = body.scrollHeight;
+  sendBtn.disabled = true;
+
+  try{
+    const systemPrompt = await getSystemPrompt();
+    const memory = await getMemory();
+    const summary = currentBook.summary || '';
+    const batch = currentChatBatch;
+
+    let messages;
+    const newUserPrefix = locatorLabel ? `[📍${locatorLabel}] ` : '';
+
+    if(batch.ended){
+      // 批次已结束：上下文简化为"初始上下文 + 新摘要"，不再带本批次原文/批注/历史对话，
+      // 只是为了给以后发给AI看的内容瘦身省token，界面上这个批次的历史记录本身完全不受影响，仍然原样保留、可以继续往下聊
+      let contextIntro = `以下是你们目前为止共读的背景，供你在接下来的对话中参考。\n\n`;
+      contextIntro += `【书名】${currentBook.title}${currentBook.author ? '　【作者】' + currentBook.author : ''}\n\n`;
+      if(memory) contextIntro += `【记忆】\n${memory}\n\n`;
+      if(summary) contextIntro += `【目前为止的阅读摘要】\n${summary}\n\n`;
+      contextIntro += `第${batch.startIdx+1}~${batch.endIdx+1}章这个批次已经结束，接下来是user想继续说的话，请延续温柔、专注的语气自然回应。`;
+
+      messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: contextIntro },
+        { role: 'assistant', content: '好，我在这里。' },
+        { role: 'user', content: newUserPrefix + val },
+      ];
+    } else {
+      // 第三层上下文：初始上下文 + 本批次原文 + 本批次批注(AI已写的annotationText) + 历史对话 + 这次新消息
+      const chaptersSlice = currentBook.chapters.slice(batch.startIdx, batch.endIdx + 1);
+      const chaptersText = chaptersSlice.map((ch, i)=>{
+        const realIdx = batch.startIdx + i;
+        const paraText = paragraphsToPlainText(ch.paragraphs, realIdx+1);
+        return `《${ch.title}》\n${paraText}`;
+      }).join('\n\n---\n\n');
+
+      let contextIntro = `以下是你们正在共读的这一批次（第${batch.startIdx+1}~${batch.endIdx+1}章）的完整背景，供你在接下来的实时对话中参考。\n\n`;
+      contextIntro += `【书名】${currentBook.title}${currentBook.author ? '　【作者】' + currentBook.author : ''}\n\n`;
+      if(memory) contextIntro += `【记忆】\n${memory}\n\n`;
+      if(summary) contextIntro += `【目前为止的阅读摘要】\n${summary}\n\n`;
+      contextIntro += `【本批次章节原文】\n${chaptersText}\n\n`;
+      contextIntro += `【你之前为这一批次写下的批注与心得】\n${batch.annotationText}\n\n`;
+      contextIntro += `接下来是user在这一批次里跟你的实时对话，请延续温柔、专注的语气自然回应，不需要重复背景内容。`;
+
+      messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: contextIntro },
+        { role: 'assistant', content: '好，我在这里，读完了这几章，也想好好听你说说话。' },
+      ];
+
+      // 把这一批次已有的历史对话也加入，保持多轮上下文连贯（跨章节打开悬浮球也能看到同一条上下文）
+      const history = batch.chatHistory || [];
+      history.forEach(msg=>{
+        const prefix = msg.locatorLabel ? `[📍${msg.locatorLabel}] ` : '';
+        messages.push({ role: msg.role === 'me' ? 'user' : 'assistant', content: prefix + msg.text });
+      });
+
+      messages.push({ role: 'user', content: newUserPrefix + val });
+    }
+
+    const cotOn = await getCotEnabled();
+    const nowAi = Date.now();
+    const msgId = 'msg_' + nowAi + '_' + Math.random().toString(36).slice(2,7);
+
+    // 先插入一个空壳AI消息气泡占位，reasoning为空字符串时renderChatMessage不会渲染CoT框，
+    // 所以这里手动搭一个初始骨架，后面流式收到内容后直接操作DOM填充，不整体重渲染（保留用户展开/收起状态、滚动位置）
+    body.insertAdjacentHTML('beforeend', renderChatMessage('ai', '', nowAi, { msgId }));
+    const msgNode = body.querySelector(`[data-msg-id="${msgId}"]`);
+    const bubbleNode = msgNode.querySelector('.chat-bubble');
+    const bodyWrapNode = msgNode.querySelector('.chat-body-wrap');
+    body.scrollTop = body.scrollHeight;
+
+    let replyText = '', reasoningText = '', thinkMs = null;
+    let cotBoxNode = null, cotContentNode = null, cotLabelNode = null;
+    const streamStartedAt = Date.now();
+    let tickTimer = null;
+
+    // 思考中的跳动计时：每100ms刷新一次"深度思考 (X.Xs)"文案，直到正文第一个字出现才停止跳动、定格最终耗时
+    function startTicking(){
+      tickTimer = setInterval(()=>{
+        if(cotLabelNode) cotLabelNode.textContent = `深度思考 (${((Date.now()-streamStartedAt)/1000).toFixed(1)}s)`;
+      }, 100);
+    }
+    function stopTicking(finalMs){
+      if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+      if(cotLabelNode) cotLabelNode.textContent = `深度思考 (${(finalMs/1000).toFixed(1)}s)`;
+    }
+
+    // 首次收到reasoning分块时，才现场搭建CoT折叠框（避免关闭CoT开关时凭空出现空框）
+    function ensureCotBox(){
+      if(cotBoxNode) return;
+      bodyWrapNode.insertAdjacentHTML('afterbegin', `<div class="cot-box open">
+        <div class="cot-summary" onclick="this.parentElement.classList.toggle('open')">
+          <span class="cot-icon">💫</span><span class="cot-label">深度思考</span><span class="cot-caret">▾</span>
+        </div>
+        <div class="cot-content"></div>
+      </div>`);
+      cotBoxNode = bodyWrapNode.querySelector('.cot-box');
+      cotContentNode = cotBoxNode.querySelector('.cot-content');
+      cotLabelNode = cotBoxNode.querySelector('.cot-label');
+      startTicking();
+    }
+
+    try{
+      const streamResult = await callDeepSeekStream(messages, {
+        useCot: cotOn,
+        onReasoningChunk: (delta)=>{
+          ensureCotBox();
+          reasoningText += delta;
+          cotContentNode.innerHTML = escapeHtml(reasoningText).replace(/\n/g,'<br>');
+          body.scrollTop = body.scrollHeight;
+        },
+        onContentChunk: (delta)=>{
+          if(thinkMs === null && cotBoxNode){
+            thinkMs = Date.now() - streamStartedAt;
+            stopTicking(thinkMs);
+          }
+          replyText += delta;
+          bubbleNode.innerHTML = escapeHtml(replyText).replace(/\n/g,'<br>');
+          body.scrollTop = body.scrollHeight;
+        }
+      });
+      replyText = streamResult.replyText;
+      reasoningText = streamResult.reasoning || '';
+      thinkMs = streamResult.thinkMs;
+      var totalTokens = streamResult.totalTokens, hitTokens = streamResult.hitTokens;
+    } catch(streamErr){
+      if(streamErr.message === 'STREAM_UNSUPPORTED'){
+        // 极少数不支持流式的环境，兜底为原有的一次性调用；先清掉占位气泡，走原逻辑重新渲染一条完整消息
+        msgNode.remove();
+        const fallback = await callDeepSeekWithUsage(messages, { useCot: cotOn });
+        replyText = fallback.replyText; reasoningText = fallback.reasoning || ''; totalTokens = fallback.totalTokens; hitTokens = fallback.hitTokens; thinkMs = null;
+        body.insertAdjacentHTML('beforeend', renderChatMessage('ai', replyText, nowAi, { totalTokens, hitTokens, reasoning: reasoningText, thinkMs }));
+        body.scrollTop = body.scrollHeight;
+      } else {
+        if(tickTimer) clearInterval(tickTimer);
+        msgNode.remove();
+        throw streamErr;
+      }
+    }
+
+    // 收尾：用最终数据重新渲染这条消息，补上token/缓存展示、定格的思考秒数，替换掉流式过程中的手搭骨架
+    const finalNode = body.querySelector(`[data-msg-id="${msgId}"]`);
+    if(finalNode){
+      finalNode.outerHTML = renderChatMessage('ai', replyText, nowAi, { totalTokens, hitTokens, reasoning: reasoningText || null, thinkMs });
+    }
+    body.scrollTop = body.scrollHeight;
+
+    // 持久化：把这一问一答追加进批次的 chatHistory，存回数据库
+    batch.chatHistory = batch.chatHistory || [];
+    batch.chatHistory.push({ role: 'me', text: val, at: nowMe, locatorLabel: locatorLabel || null });
+    batch.chatHistory.push({ role: 'ai', text: replyText, at: nowAi, totalTokens: totalTokens, hitTokens: hitTokens, reasoning: reasoningText || null, thinkMs: thinkMs });
+    await idbPut('batches', batch);
+    currentChatBatch = batch;
+
+    // 悬浮球对话中若出现 [好句子][心得] 标记，同样抓取存入书摘
+    const { goodLines, thoughts } = extractMarkedItems(replyText);
+    if(goodLines.length || thoughts.length){
+      const bookmarkRec = await idbGet('meta', `bookmarks_${currentBook.id}`) || { key:`bookmarks_${currentBook.id}`, goodLines:[], thoughts:[] };
+      goodLines.forEach(g=> bookmarkRec.goodLines.push({ text: g, at: Date.now(), range: `第${batch.startIdx+1}-${batch.endIdx+1}章`, source: 'ai' }));
+      thoughts.forEach(t=> bookmarkRec.thoughts.push({ text: t, at: Date.now(), range: `第${batch.startIdx+1}-${batch.endIdx+1}章`, source: 'ai', kind: 'daily' }));
+      await idbPut('meta', bookmarkRec);
+    }
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){
+      showToast('请先在小狗爪印🐾里填写 API Key');
+    } else {
+      showToast('回复失败，请检查网络或 API Key 是否正确');
+    }
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+
+// ---------- 生成阅读摘要：复用第三层上下文，结果只是草稿，不写进chatHistory，确认后才存入book.summary ----------
+document.getElementById('btnGenSummary').addEventListener('click', async ()=>{
+  if(!currentChatBatch){
+    showToast('这一章还没有生成批注，先去目录页生成这一批次吧');
+    return;
+  }
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    return;
+  }
+
+  const btn = document.getElementById('btnGenSummary');
+  const body = document.getElementById('chatBody');
+  btn.disabled = true;
+  const originalIcon = btn.textContent;
+  btn.textContent = '…';
+
+  try{
+    const messages = await buildSummaryMessages(currentChatBatch);
+    const { replyText } = await callDeepSeekWithUsage(messages);
+
+    const draftId = 'summary_draft_' + Date.now();
+    body.insertAdjacentHTML('beforeend', `
+      <div class="chat-msg ai" id="${draftId}">
+        <div class="chat-header">
+          <div class="chat-avatar">${avatarHtml(chatIdentityCache.charAvatar, '📝')}</div>
+          <div class="chat-name">${escapeHtml(chatIdentityCache.charName)} · 摘要草稿</div>
+        </div>
+        <div class="chat-body-wrap">
+          <div class="chat-bubble summary-draft-bubble">${escapeHtml(replyText).replace(/\n/g,'<br>')}</div>
+          <div class="summary-draft-actions">
+            <button class="btn-accept" data-action="accept">存为本书摘要</button>
+            <button class="btn-discard" data-action="discard">丢弃，重新生成</button>
+          </div>
+        </div>
+      </div>
+    `);
+    body.scrollTop = body.scrollHeight;
+
+    const draftEl = document.getElementById(draftId);
+    draftEl.querySelector('[data-action="accept"]').addEventListener('click', async ()=>{
+      currentBook.summary = replyText;
+      currentBook.updatedAt = Date.now();
+      await idbPut('books', currentBook);
+      const actions = draftEl.querySelector('.summary-draft-actions');
+      if(actions) actions.outerHTML = `<div class="summary-draft-saved">✅ 已存为本书摘要</div>`;
+      showToast('摘要已保存');
+    });
+    draftEl.querySelector('[data-action="discard"]').addEventListener('click', ()=>{
+      draftEl.remove();
+    });
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){
+      showToast('请先在小狗爪印🐾里填写 API Key');
+    } else {
+      showToast('生成失败，请检查网络或 API Key 是否正确');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalIcon;
+  }
+});
+
+// ---------- 结束本批次：生成融合摘要（复用与"生成摘要"完全一样的第三层上下文逻辑），
+// 确认后：① 新摘要覆盖写入 book.summary（融合旧摘要，不是堆叠）
+// ② 给这个批次打上 ended 标记——不删不改批次已存的原文/批注/聊天记录，只影响"以后在这个批次里继续聊天时，发给AI看的上下文"
+//    （从"初始+本批次原文+批注+完整聊天历史"简化为"初始+新摘要"，为了省token，不是删除记忆）
+// 这是不可逆操作：结一次之后没有"重新展开"的入口，所以生成后的摘要允许现改，且要走二次确认
+document.getElementById('btnEndBatch').addEventListener('click', async ()=>{
+  if(!currentChatBatch){
+    showToast('这一章还没有生成批注，先去目录页生成这一批次吧');
+    return;
+  }
+  if(currentChatBatch.ended){
+    showToast('这个批次已经结束过了');
+    return;
+  }
+
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  if(!keyRecord || !keyRecord.value){
+    showToast('请先在小狗爪印🐾里填写 DeepSeek API Key');
+    return;
+  }
+
+  const btn = document.getElementById('btnEndBatch');
+  btn.disabled = true;
+  const originalIcon = btn.textContent;
+  btn.textContent = '…';
+
+  try{
+    const messages = await buildSummaryMessages(currentChatBatch);
+    const { replyText } = await callDeepSeekWithUsage(messages);
+
+    // 展示可编辑预览 + 不可逆二次确认，复用悬浮球对话流里插入一条特殊消息的方式（和"生成摘要"草稿视觉一致）
+    const body = document.getElementById('chatBody');
+    const draftId = 'endbatch_draft_' + Date.now();
+    body.insertAdjacentHTML('beforeend', `
+      <div class="chat-msg ai" id="${draftId}">
+        <div class="chat-header">
+          <div class="chat-avatar">${avatarHtml(chatIdentityCache.charAvatar, '🔒')}</div>
+          <div class="chat-name">${escapeHtml(chatIdentityCache.charName)} · 结束本批次 · 新摘要草稿</div>
+        </div>
+        <div class="chat-body-wrap">
+          <textarea class="final-review-textarea" id="${draftId}_input" rows="6">${escapeHtml(replyText)}</textarea>
+          <div class="summary-draft-actions">
+            <button class="btn-accept" data-action="confirm-end">确认结束，存为新摘要</button>
+            <button class="btn-discard" data-action="discard-end">算了，先不结束</button>
+          </div>
+        </div>
+      </div>
+    `);
+    body.scrollTop = body.scrollHeight;
+
+    const draftEl = document.getElementById(draftId);
+    draftEl.querySelector('[data-action="confirm-end"]').addEventListener('click', async ()=>{
+      const finalSummary = document.getElementById(`${draftId}_input`).value.trim() || replyText;
+      const confirmed = await showConfirm('结束本批次后，以后在这个批次里继续聊天，就只会记得这份新摘要，不会再看这一批次的原文和这段时间的完整对话（但这段对话本身会一直留在这里，不会被删）。这个操作不能撤销，确定要结束吗？');
+      if(!confirmed) return;
+
+      currentBook.summary = finalSummary;
+      currentBook.updatedAt = Date.now();
+      await idbPut('books', currentBook);
+
+      currentChatBatch.ended = true;
+      currentChatBatch.endedAt = Date.now();
+      await idbPut('batches', currentChatBatch);
+
+      const actions = draftEl.querySelector('.summary-draft-actions');
+      if(actions) actions.outerHTML = `<div class="summary-draft-saved">✅ 本批次已结束，新摘要已存入</div>`;
+      document.getElementById(`${draftId}_input`).disabled = true;
+
+      document.getElementById('btnGenSummary').style.display = 'none';
+      document.getElementById('btnEndBatch').style.display = 'none';
+      const header = document.getElementById('chatHeaderText');
+      header.textContent = `第${currentChatBatch.startIdx+1}~${currentChatBatch.endIdx+1}章 · 本批次对话（已结束 · 精简上下文）`;
+
+      showToast('本批次已结束🐾');
+    });
+    draftEl.querySelector('[data-action="discard-end"]').addEventListener('click', ()=>{
+      draftEl.remove();
+    });
+
+  }catch(err){
+    console.error(err);
+    if(err.message === 'NO_API_KEY'){
+      showToast('请先在小狗爪印🐾里填写 API Key');
+    } else {
+      showToast('生成失败，请检查网络或 API Key 是否正确');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalIcon;
+  }
+});
+
+// ---------- 通用返回按钮 ----------
+document.querySelectorAll('[data-go]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    switchView(btn.dataset.go);
+    if(btn.dataset.go === 'view-shelf') renderShelf();
+  });
+});
+
+// ---------- 设置页 ----------
+document.getElementById('btnSettings').addEventListener('click', async ()=>{
+  const keyRecord = await idbGet('meta', 'deepseek_api_key');
+  document.getElementById('apiKeyStatus').textContent = keyRecord && keyRecord.value ? '已设置' : '未设置';
+
+  const sp = await getSystemPrompt();
+  document.getElementById('systemPromptInput').value = sp;
+
+  const mem = await getMemory();
+  document.getElementById('memoryInput').value = mem;
+
+  const modelConfig = await getModelConfig();
+  document.getElementById('apiBaseInput').value = modelConfig.apiBase;
+  document.getElementById('modelNameInput').value = modelConfig.modelName;
+
+  document.getElementById('summaryInput').value = (currentBook && currentBook.summary) ? currentBook.summary : '';
+
+  const brevity = await getBrevityInstruction();
+  document.getElementById('brevityInput').value = brevity;
+
+  const identity = await getChatIdentity();
+  document.getElementById('myNameInput').value = identity.myName;
+  document.getElementById('charNameInput').value = identity.charName;
+  renderAvatarPreview('myAvatarPreview', identity.myAvatar, '🙂');
+  renderAvatarPreview('charAvatarPreview', identity.charAvatar, '💭');
+  pendingIdentityAvatars = { myAvatar: identity.myAvatar, charAvatar: identity.charAvatar };
+
+  const readerBg = await getReaderBackground();
+  pendingReaderBg = { imageDataUrl: readerBg.imageDataUrl, overlayOpacity: readerBg.overlayOpacity };
+  renderReaderBgPreview(readerBg.imageDataUrl);
+  document.getElementById('readerBgOpacityInput').value = Math.round(readerBg.overlayOpacity * 100);
+  document.getElementById('readerBgOpacityValue').textContent = Math.round(readerBg.overlayOpacity * 100) + '%';
+
+  switchView('view-settings');
+});
+
+function renderAvatarPreview(elId, dataUrl, fallbackEmoji){
+  const el = document.getElementById(elId);
+  if(dataUrl){
+    el.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    el.innerHTML = `<span style="font-size:20px;">${fallbackEmoji}</span>`;
+  }
+}
+
+// 设置页里的背景图缩略预览：有图显示图，没图显示提示文字
+function renderReaderBgPreview(dataUrl){
+  const el = document.getElementById('readerBgPreview');
+  const hint = document.getElementById('readerBgPreviewHint');
+  if(dataUrl){
+    el.style.backgroundImage = `url(${dataUrl})`;
+    if(hint) hint.style.display = 'none';
+  } else {
+    el.style.backgroundImage = '';
+    if(hint) hint.style.display = '';
+  }
+}
+
+// 把背景设置真正应用到阅读页DOM上：没有图片时恢复原本纸张底色，不受任何影响
+function applyReaderBackground(bg){
+  const bgImageEl = document.getElementById('readerBgImage');
+  const bgOverlayEl = document.getElementById('readerBgOverlay');
+  const readerView = document.getElementById('view-reader');
+  if(bg && bg.imageDataUrl){
+    bgImageEl.style.backgroundImage = `url(${bg.imageDataUrl})`;
+    bgOverlayEl.style.opacity = String(bg.overlayOpacity != null ? bg.overlayOpacity : 0.55);
+    readerView.classList.add('has-bg');
+  } else {
+    bgImageEl.style.backgroundImage = '';
+    readerView.classList.remove('has-bg');
+  }
+}
+
+// 暂存本次设置页编辑中的头像（未点保存前不写库），避免频繁写 IndexedDB
+let pendingIdentityAvatars = { myAvatar: '', charAvatar: '' };
+let pendingReaderBg = { imageDataUrl: null, overlayOpacity: 0.55 };
+
+document.getElementById('myAvatarPreview').addEventListener('click', ()=> document.getElementById('myAvatarFile').click());
+document.getElementById('charAvatarPreview').addEventListener('click', ()=> document.getElementById('charAvatarFile').click());
+
+document.getElementById('myAvatarFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const dataUrl = await compressAvatar(file);
+    pendingIdentityAvatars.myAvatar = dataUrl;
+    renderAvatarPreview('myAvatarPreview', dataUrl, '🙂');
+  }catch(err){
+    showToast('头像处理失败，请换一张图片试试');
+  }
+});
+document.getElementById('charAvatarFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const dataUrl = await compressAvatar(file);
+    pendingIdentityAvatars.charAvatar = dataUrl;
+    renderAvatarPreview('charAvatarPreview', dataUrl, '💭');
+  }catch(err){
+    showToast('头像处理失败，请换一张图片试试');
+  }
+});
+
+document.getElementById('btnSaveIdentity').addEventListener('click', async ()=>{
+  const myName = document.getElementById('myNameInput').value.trim() || DEFAULT_IDENTITY.myName;
+  const charName = document.getElementById('charNameInput').value.trim() || DEFAULT_IDENTITY.charName;
+  const identity = {
+    myName, charName,
+    myAvatar: pendingIdentityAvatars.myAvatar || '',
+    charAvatar: pendingIdentityAvatars.charAvatar || '',
+  };
+  await idbPut('meta', { key:'chat_identity', value: identity });
+  showToast('悬浮球身份已保存');
+});
+
+// 阅读页背景：点击预览区触发文件选择
+document.getElementById('readerBgPreview').addEventListener('click', ()=> document.getElementById('readerBgFile').click());
+
+document.getElementById('readerBgFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const dataUrl = await compressBackgroundImage(file);
+    pendingReaderBg.imageDataUrl = dataUrl;
+    renderReaderBgPreview(dataUrl);
+  }catch(err){
+    showToast('背景图处理失败，请换一张图片试试');
+  }
+});
+
+// 滑块拖动时实时更新百分比文字，方便调的时候心里有数（暂不立即生效，等点"保存背景设置"）
+document.getElementById('readerBgOpacityInput').addEventListener('input', (e)=>{
+  document.getElementById('readerBgOpacityValue').textContent = e.target.value + '%';
+});
+
+document.getElementById('btnSaveReaderBg').addEventListener('click', async ()=>{
+  const opacityPercent = Number(document.getElementById('readerBgOpacityInput').value);
+  const bg = { imageDataUrl: pendingReaderBg.imageDataUrl || null, overlayOpacity: opacityPercent / 100 };
+  await setReaderBackground(bg);
+  applyReaderBackground(bg);
+  showToast(bg.imageDataUrl ? '阅读页背景已保存' : '背景设置已保存');
+});
+
+document.getElementById('btnRemoveReaderBg').addEventListener('click', async ()=>{
+  pendingReaderBg = { imageDataUrl: null, overlayOpacity: 0.55 };
+  renderReaderBgPreview(null);
+  const bg = { imageDataUrl: null, overlayOpacity: 0.55 };
+  await setReaderBackground(bg);
+  applyReaderBackground(bg);
+  document.getElementById('readerBgOpacityInput').value = 55;
+  document.getElementById('readerBgOpacityValue').textContent = '55%';
+  showToast('已恢复原本的纸张背景');
+});
+
+document.getElementById('btnSaveModelConfig').addEventListener('click', async ()=>{
+  const apiBase = document.getElementById('apiBaseInput').value.trim() || DEFAULT_API_BASE;
+  const modelName = document.getElementById('modelNameInput').value.trim() || DEFAULT_MODEL_NAME;
+  await idbPut('meta', { key:'model_config', value: { apiBase, modelName } });
+  showToast('模型配置已保存');
+});
+
+document.getElementById('btnSaveKey').addEventListener('click', async ()=>{
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if(!val){ showToast('请输入 Key'); return; }
+  await idbPut('meta', { key:'deepseek_api_key', value: val });
+  document.getElementById('apiKeyStatus').textContent = '已设置';
+  document.getElementById('apiKeyInput').value = '';
+  showToast('已保存');
+});
+
+document.getElementById('btnSaveSystemPrompt').addEventListener('click', async ()=>{
+  const val = document.getElementById('systemPromptInput').value.trim();
+  await idbPut('meta', { key:'system_prompt', value: val || DEFAULT_SYSTEM_PROMPT });
+  showToast('系统提示词已保存');
+});
+
+document.getElementById('btnSaveMemory').addEventListener('click', async ()=>{
+  const val = document.getElementById('memoryInput').value;
+  await idbPut('meta', { key:'memory', value: val });
+  showToast('记忆已保存');
+});
+
+document.getElementById('btnSaveSummary').addEventListener('click', async ()=>{
+  if(!currentBook){ showToast('请先从书架进入一本书'); return; }
+  const val = document.getElementById('summaryInput').value;
+  currentBook.summary = val;
+  currentBook.updatedAt = Date.now();
+  await idbPut('books', currentBook);
+  showToast('本书摘要已保存');
+});
+
+document.getElementById('btnSaveBrevity').addEventListener('click', async ()=>{
+  const val = document.getElementById('brevityInput').value.trim();
+  await idbPut('meta', { key:'brevity_instruction', value: val || BREVITY_INSTRUCTION });
+  showToast('风格约束已保存');
+});
+
+document.getElementById('btnExport').addEventListener('click', async ()=>{
+  const books = await idbGetAll('books');
+  const batches = await idbGetAll('batches');
+  const images = await idbGetAll('images'); // epub插图，靠bookId关联到对应的书
+  const metaAll = await idbGetAll('meta'); // 含 system_prompt / memory / bookmarks_* （不含api key，见下方过滤）
+  const metaFiltered = metaAll.filter(m => m.key !== 'deepseek_api_key');
+  const data = { exportedAt: new Date().toISOString(), books, batches, images, meta: metaFiltered };
+  const filename = `阅读空间备份_${new Date().toISOString().slice(0,10)}.json`;
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type:'application/json' });
+
+  // 优先用 Web Share API：这是 iOS Safari 原生支持、专为"分享/保存文件"设计的接口，不会被浏览器的弹窗拦截器误伤
+  // （前面几个 await 之后再调 window.open 会被当成"非用户直接触发"而拦截，这是 navigator.share 要解决的问题）
+  const file = new File([blob], filename, { type:'application/json' });
+  if(navigator.canShare && navigator.canShare({ files:[file] })){
+    try{
+      await navigator.share({ files:[file], title: filename });
+      showToast('备份已生成（不含API Key，请单独保管）');
+      return;
+    } catch(err){
+      if(err && err.name === 'AbortError'){ return; } // 用户自己取消了分享面板，不算失败，不用提示
+      // 分享失败（非用户取消），继续走下面的兜底下载逻辑
+    }
+  }
+
+  // 不支持 Web Share API 的平台（多数桌面浏览器）：走传统的a标签下载
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a); // 必须先挂到DOM上，孤立的a标签在部分浏览器上click()不生效
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('备份已导出（不含API Key，请单独保管）');
+});
+
+// ---------- 导入备份 ----------
+// meta 表里的 key 分两类：
+//   1) 全局设置（system_prompt / memory / brevity_instruction / reader_background / cot_enabled / chat_identity / model_config）
+//      —— 预览里单独列出，逐条可勾选
+//   2) 按书关联（bookmarks_${bookId} 等）—— 跟随对应的书一起导入，不在设置区单独出现
+//   deepseek_api_key 无论 JSON 里有没有，导入时一律跳过，绝不写入
+const IMPORT_META_LABELS = {
+  system_prompt: '系统提示词（人设）',
+  memory: '记忆',
+  brevity_instruction: '简短风格约束',
+  reader_background: '阅读器背景',
+  cot_enabled: '思维链开关',
+  chat_identity: '聊天身份设置',
+  model_config: '模型配置（接口地址/模型名）',
+};
+const IMPORT_META_GLOBAL_KEYS = Object.keys(IMPORT_META_LABELS);
+
+let pendingImportData = null; // 解析后的原始JSON，等待用户在预览弹层里勾选确认
+
+function closeImportOverlay(){
+  document.getElementById('importOverlay').classList.remove('active');
+  pendingImportData = null;
+  document.getElementById('importFileInput').value = ''; // 允许重复选择同一个文件
+}
+
+function renderImportPreview(data){
+  const metaAll = Array.isArray(data.meta) ? data.meta : [];
+  const books = Array.isArray(data.books) ? data.books : [];
+  const batches = Array.isArray(data.batches) ? data.batches : [];
+
+  // 全局设置项：只展示 IMPORT_META_LABELS 里认识的 key，未知 key 不展示但仍会随"合并/清空"整体导入，避免用户自定义字段被丢弃
+  const metaSection = document.getElementById('importMetaSection');
+  const knownMeta = metaAll.filter(m => IMPORT_META_GLOBAL_KEYS.includes(m.key));
+  if(knownMeta.length){
+    metaSection.innerHTML = `<div class="import-section-heading">设置项（${knownMeta.length}）</div>` +
+      knownMeta.map(m=>{
+        const label = IMPORT_META_LABELS[m.key] || m.key;
+        let preview = '';
+        if(typeof m.value === 'string'){
+          preview = m.value.trim().slice(0, 60) + (m.value.length > 60 ? '…' : '');
+        } else if(m.value && typeof m.value === 'object'){
+          preview = JSON.stringify(m.value);
+        }
+        return `<label class="import-item-label">
+          <input type="checkbox" class="import-meta-check" data-key="${escapeHtml(m.key)}" checked>
+          <span>
+            <div class="import-item-title">${escapeHtml(label)}</div>
+            ${preview ? `<div class="import-item-desc">${escapeHtml(preview)}</div>` : ''}
+          </span>
+        </label>`;
+      }).join('');
+  } else {
+    metaSection.innerHTML = `<div class="import-section-heading">设置项</div><div class="import-item-desc">（这份备份不包含设置项）</div>`;
+  }
+
+  // 书本：按书列出，显示批次数 / 最后更新时间，而不是把批注全文摊开——内容量太大不适合逐字预览
+  const booksSection = document.getElementById('importBooksSection');
+  if(books.length){
+    booksSection.innerHTML = `<div class="import-section-heading">书本（${books.length}）</div>` +
+      books.map(b=>{
+        const batchCount = batches.filter(bt => bt.key && bt.key.startsWith(`${b.id}_`)).length;
+        const updated = b.updatedAt ? formatTimeStamp(b.updatedAt) : '未知时间';
+        return `<label class="import-item-label">
+          <input type="checkbox" class="import-book-check" data-book-id="${escapeHtml(b.id)}" checked>
+          <span>
+            <div class="import-item-title">${escapeHtml(b.title || '未命名书籍')}</div>
+            <div class="import-item-desc">${batchCount} 个批次 · 最后更新于 ${updated}</div>
+          </span>
+        </label>`;
+      }).join('');
+  } else {
+    booksSection.innerHTML = `<div class="import-section-heading">书本</div><div class="import-item-desc">（这份备份不包含书本数据）</div>`;
+  }
+
+  document.getElementById('importOverlay').classList.add('active');
+}
+
+document.getElementById('btnImport').addEventListener('click', ()=>{
+  document.getElementById('importFileInput').click();
+});
+
+document.getElementById('importFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data || typeof data !== 'object' || (!data.books && !data.batches && !data.meta)){
+      showToast('这份文件看起来不是有效的备份');
+      document.getElementById('importFileInput').value = '';
+      return;
+    }
+    pendingImportData = data;
+    renderImportPreview(data);
+  } catch(err){
+    showToast('文件读取失败，请确认是导出的备份 JSON');
+    document.getElementById('importFileInput').value = '';
+  }
+});
+
+document.getElementById('importCloseBtn').addEventListener('click', closeImportOverlay);
+
+async function performImport(mode){
+  if(!pendingImportData) return;
+  const data = pendingImportData;
+
+  const selectedMetaKeys = Array.from(document.querySelectorAll('.import-meta-check:checked')).map(el=>el.dataset.key);
+  const selectedBookIds = Array.from(document.querySelectorAll('.import-book-check:checked')).map(el=>el.dataset.bookId);
+
+  if(mode === 'replace'){
+    if(!(await showConfirm('清空后导入会删除本地所有书本、批次和设置，且不可恢复。确定要继续吗？'))) return;
+    const existingBooks = await idbGetAll('books');
+    const existingBatches = await idbGetAll('batches');
+    const existingImages = await idbGetAll('images');
+    const existingMeta = await idbGetAll('meta');
+    for(const b of existingBooks) await idbDelete('books', b.id);
+    for(const bt of existingBatches) await idbDelete('batches', bt.key);
+    for(const img of existingImages) await idbDelete('images', img.id);
+    for(const m of existingMeta) await idbDelete('meta', m.key);
+  } else {
+    if(!(await showConfirm('合并导入会用备份里的内容覆盖同名/同ID的本地数据，其余本地数据保留。确定要继续吗？'))) return;
+  }
+
+  // 写入勾选的全局设置项（deepseek_api_key 无论是否勾选，永远跳过）
+  const metaAll = Array.isArray(data.meta) ? data.meta : [];
+  for(const m of metaAll){
+    if(m.key === 'deepseek_api_key') continue;
+    if(IMPORT_META_GLOBAL_KEYS.includes(m.key) && !selectedMetaKeys.includes(m.key)) continue; // 未勾选的全局设置项跳过
+    await idbPut('meta', m);
+  }
+
+  // 写入勾选的书本，以及该书对应的所有批次和 bookmarks_${bookId} 记录
+  const books = Array.isArray(data.books) ? data.books : [];
+  const batches = Array.isArray(data.batches) ? data.batches : [];
+  const images = Array.isArray(data.images) ? data.images : [];
+  for(const b of books){
+    if(!selectedBookIds.includes(String(b.id))) continue;
+    await idbPut('books', b);
+    const relatedBatches = batches.filter(bt => bt.key && bt.key.startsWith(`${b.id}_`));
+    for(const bt of relatedBatches) await idbPut('batches', bt);
+    const relatedImages = images.filter(img => img.bookId === b.id);
+    for(const img of relatedImages) await idbPut('images', img);
+    const bookmarkRec = metaAll.find(m => m.key === `bookmarks_${b.id}`);
+    if(bookmarkRec) await idbPut('meta', bookmarkRec);
+  }
+
+  closeImportOverlay();
+  showToast('导入完成');
+  if(typeof renderShelf === 'function') renderShelf();
+}
+
+document.getElementById('importModeMerge').addEventListener('click', ()=> performImport('merge'));
+document.getElementById('importModeReplace').addEventListener('click', ()=> performImport('replace'));
+
+// 主题切换：选中即生效并持久化。选中态样式不依赖 CSS :has()（iOS 16.4以下不支持），改用JS直接切换class兜底
+document.querySelectorAll('input[name="themeChoice"]').forEach(radio=>{
+  radio.addEventListener('change', async (e)=>{
+    const themeId = e.target.value;
+    applyTheme(themeId);
+    await setTheme(themeId);
+    document.querySelectorAll('.theme-choice-row').forEach(row=>{
+      row.classList.toggle('is-selected', row.contains(e.target));
+    });
+    // 若"缘分未尽"横幅当前正显示着，emoji不会自动跟着重渲染（它只在renderFinishedBanner调用时取值），这里顺手同步一下
+    const fbText = document.querySelector('.finished-banner .fb-text');
+    if(fbText){
+      fbText.textContent = `亲爱的塞西莉娅，我们的缘分未尽。${getFinalBannerEmoji()}`;
+    }
+  });
+});
+document.querySelectorAll('input[name="themeChoice"]:checked').forEach(radio=>{
+  radio.closest('.theme-choice-row').classList.add('is-selected');
+});
+
+document.getElementById('btnClearBook').addEventListener('click', async ()=>{
+  if(!currentBookId){ showToast('请先从书架进入一本书'); return; }
+  if(!(await showConfirm('确定删除这本书及其所有批注和对话记录吗？此操作不可恢复。\n\n"我如果爱你——绝不像攀援的凌霄花，借你的高枝炫耀自己。"'))) return;
+  await idbDelete('books', currentBookId);
+  // epub 图片存在独立的 images 表，删书时要一并清理，否则图片会变成孤儿数据、体积只增不减
+  const allImages = await idbGetAll('images');
+  const orphanImages = allImages.filter(img=> img.bookId === currentBookId);
+  for(const img of orphanImages) await idbDelete('images', img.id);
+  showToast('已删除');
+  currentBookId = null;
+  switchView('view-shelf');
+  renderShelf();
+});
+
+// ---------- 手动摘录：常驻悬浮按钮（😽） ----------
+// 按钮固定在阅读页右下角，不跟随选区位置，避免和手机浏览器自带的复制/翻译菜单重叠。
+// 只在阅读页（#readerBody）内选中文字时变亮可点；离开阅读页或选区消失时变暗回待激活状态。
+const selectBubble = document.getElementById('selectBubble');
+let pendingManualQuote = null; // 当前选中的文字，供点击按钮时读取
+
+function setBubbleActive(text){
+  pendingManualQuote = text;
+  selectBubble.classList.add('active');
+  selectBubble.textContent = '😻';
+}
+function setBubbleInactive(){
+  pendingManualQuote = null;
+  selectBubble.classList.remove('active');
+  selectBubble.textContent = '😸';
+}
+
+document.addEventListener('selectionchange', ()=>{
+  const sel = window.getSelection();
+  if(!sel || sel.isCollapsed || sel.rangeCount === 0){ setBubbleInactive(); return; }
+  const text = sel.toString().trim();
+  if(!text){ setBubbleInactive(); return; }
+
+  // 判断选区是否落在阅读页正文范围内（而不是设置页文本框或其他区域）
+  const anchorNode = sel.anchorNode;
+  const readerBody = document.getElementById('readerBody');
+  if(!anchorNode || !readerBody.contains(anchorNode)){ setBubbleInactive(); return; }
+  // 阅读页本身必须是当前可见视图，避免切走页面后残留的选区状态误触发
+  if(!document.getElementById('view-reader').classList.contains('active')){ setBubbleInactive(); return; }
+
+  setBubbleActive(text);
+});
+
+// 阅读页显示/隐藏时，同步显示/隐藏这个常驻按钮
+function updateSelectBubbleVisibility(){
+  const onReader = document.getElementById('view-reader').classList.contains('active');
+  if(onReader){ selectBubble.classList.add('show'); }
+  else { selectBubble.classList.remove('show'); setBubbleInactive(); }
+}
+
+// 关键修复：不要等"点击完成"（click）才去读选中的文字。
+// 手机浏览器在点击按钮的瞬间会顺手清空文字选区，这个清空动作有概率抢在 click 事件之前触发 selectionchange，
+// 把 pendingManualQuote 提前清空，导致存进小白笺的是空文字。
+// 改成在手指/鼠标"刚碰到"按钮的瞬间（mousedown / touchstart）就把当前选中的文字先取一份快照存起来，
+// 这样即使后面选区被浏览器清空，要存的文字已经提前拿到手，不受影响。
+let capturedQuote = null;
+function captureQuoteNow(){
+  capturedQuote = pendingManualQuote;
+}
+selectBubble.addEventListener('mousedown', captureQuoteNow);
+selectBubble.addEventListener('touchstart', captureQuoteNow, { passive: true });
+
+selectBubble.addEventListener('click', async ()=>{
+  const quote = capturedQuote;
+  capturedQuote = null;
+  if(!quote || !currentBook) { return; }
+  const readerBody = document.getElementById('readerBody');
+  const firstPara = readerBody.querySelector('.para');
+  const chapterIdx = firstPara ? parseInt(firstPara.dataset.cidx, 10) : null;
+  const rangeLabel = (chapterIdx !== null && !Number.isNaN(chapterIdx)) ? `第${chapterIdx+1}章` : '';
+
+  const bookmarkRec = await idbGet('meta', `bookmarks_${currentBook.id}`) || { key:`bookmarks_${currentBook.id}`, goodLines:[], thoughts:[] };
+  bookmarkRec.goodLines = bookmarkRec.goodLines || [];
+  bookmarkRec.goodLines.push({
+    text: quote,
+    at: Date.now(),
+    range: rangeLabel,
+    source: 'manual',
+  });
+  await idbPut('meta', bookmarkRec);
+  showToast('已加入小狗日后谈 🐾');
+  setBubbleInactive();
+  window.getSelection().removeAllRanges();
+});
+
+// ---------- 初始化 ----------
+(async function init(){
+  await openDB();
+  await renderShelf();
+  updateSelectBubbleVisibility();
+  const savedBg = await getReaderBackground();
+  applyReaderBackground(savedBg);
+  const savedTheme = await getTheme();
+  applyTheme(savedTheme);
+  const themeRadio = document.querySelector(`input[name="themeChoice"][value="${savedTheme}"]`);
+  if(themeRadio){
+    themeRadio.checked = true;
+    const row = themeRadio.closest('.theme-choice-row');
+    if(row) row.classList.add('is-selected');
+  }
+})();
+</script>
+</body>
+</html>

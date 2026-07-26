@@ -1067,7 +1067,7 @@
         </div>
         <div class="field">
           <label>模型名称</label>
-          <input type="text" id="modelNameInput" placeholder="deepseek-chat">
+          <input type="text" id="modelNameInput" placeholder="deepseek-v4-flash">
         </div>
         <button class="primary-btn" id="btnSaveModelConfig">保存模型配置</button>
       </div>
@@ -1829,7 +1829,7 @@ function compressBackgroundImage(file){
 
 // ---------- DeepSeek API 调用封装 ----------
 const DEFAULT_API_BASE = 'https://api.deepseek.com';
-const DEFAULT_MODEL_NAME = 'deepseek-chat';
+const DEFAULT_MODEL_NAME = 'deepseek-v4-flash';
 
 async function getModelConfig(){
   const rec = await idbGet('meta', 'model_config');
@@ -1871,7 +1871,8 @@ async function callDeepSeek(messages, { temperature = 1.0 } = {}){
 
 // 与 callDeepSeek 相同的调用方式，但额外解析 usage 字段，算出缓存命中百分比，用于悬浮球时间戳旁展示
 // 缓存命中数据只在这次调用发生的那一刻产生，是"事后展示"，不是可随时查询的实时状态
-// useCot: 是否使用深度思考模型(deepseek-reasoner)。开启后额外解析并返回 reasoning 字段（AI的思考过程原文）
+// useCot: 是否开启深度思考。2026-07-24后 deepseek-chat/deepseek-reasoner 两个模型名停用，
+// 统一改为用 thinking 参数控制思考开关，不再靠切换model名区分（详见 getModelConfig 里的说明）
 async function callDeepSeekWithUsage(messages, { temperature = 1.0, useCot = false } = {}){
   const keyRecord = await idbGet('meta', 'deepseek_api_key');
   const apiKey = keyRecord && keyRecord.value;
@@ -1880,16 +1881,18 @@ async function callDeepSeekWithUsage(messages, { temperature = 1.0, useCot = fal
   }
   const { apiBase, modelName } = await getModelConfig();
   const base = apiBase.replace(/\/+$/, '');
-  // 深度思考开启时固定用 deepseek-reasoner，忽略设置页里自定义的模型名——
-  // 因为只有这个模型才会返回 reasoning_content，自定义模型名不一定支持
-  const effectiveModel = useCot ? 'deepseek-reasoner' : modelName;
   const resp = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify({ model: effectiveModel, messages, temperature })
+    body: JSON.stringify({
+      model: modelName,
+      messages,
+      temperature,
+      thinking: { type: useCot ? 'enabled' : 'disabled' }
+    })
   });
   if(!resp.ok){
     const errText = await resp.text().catch(()=> '');
@@ -1923,7 +1926,6 @@ async function callDeepSeekStream(messages, { temperature = 1.0, useCot = false,
   }
   const { apiBase, modelName } = await getModelConfig();
   const base = apiBase.replace(/\/+$/, '');
-  const effectiveModel = useCot ? 'deepseek-reasoner' : modelName;
 
   const startedAt = Date.now();
   const resp = await fetch(`${base}/chat/completions`, {
@@ -1932,7 +1934,13 @@ async function callDeepSeekStream(messages, { temperature = 1.0, useCot = false,
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
-    body: JSON.stringify({ model: effectiveModel, messages, temperature, stream: true })
+    body: JSON.stringify({
+      model: modelName,
+      messages,
+      temperature,
+      stream: true,
+      thinking: { type: useCot ? 'enabled' : 'disabled' }
+    })
   });
   if(!resp.ok){
     const errText = await resp.text().catch(()=> '');

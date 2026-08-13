@@ -2459,7 +2459,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-// ---------- IndexedDB 封装 ----------
+// ---------- IndexedDB 封装（带自动重连） ----------
 const DB_NAME = 'reading-space-db';
 const DB_VERSION = 2;
 let db = null;
@@ -2485,42 +2485,64 @@ function openDB(){
         _db.createObjectStore('images', { keyPath: 'id' });
       }
     };
-    req.onsuccess = (e)=>{ db = e.target.result; resolve(db); };
+    req.onsuccess = (e)=>{
+      db = e.target.result;
+      // 关键修复：Safari（尤其 iOS）在内存压力大时会把 IndexedDB 连接强制关闭。
+      // 一旦连接被关闭，再操作就会报 "The database connection is closing"，
+      // 而且这个连接死掉后不会自己恢复——必须靠"连接异常时把 db 置空，
+      // 下一次任何操作前先重新 openDB()"来自动重建连接。
+      db.onclose = ()=>{ db = null; };
+      db.onerror = ()=>{ db = null; };
+      db.onversionchange = ()=>{ db = null; };
+      resolve(db);
+    };
     req.onerror = (e)=> reject(e);
   });
 }
 
-function idbPut(storeName, value){
+// 所有 IndexedDB 操作前的统一入口：只要当前连接是好的就直接用；
+// 连接被系统关闭/异常/版本变更后自动重新 openDB()，绝不再拿死连接去开事务
+function ensureDB(){
   return new Promise((resolve, reject)=>{
-    const tx = db.transaction(storeName, 'readwrite');
+    if(db && db.name === DB_NAME){
+      resolve(db);
+      return;
+    }
+    openDB().then(resolve).catch(reject);
+  });
+}
+
+function idbPut(storeName, value){
+  return ensureDB().then(_db=> new Promise((resolve, reject)=>{
+    const tx = _db.transaction(storeName, 'readwrite');
     tx.objectStore(storeName).put(value);
     tx.oncomplete = ()=> resolve();
     tx.onerror = (e)=> reject(e);
-  });
+  }));
 }
 function idbGet(storeName, key){
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(storeName, 'readonly');
+  return ensureDB().then(_db=> new Promise((resolve, reject)=>{
+    const tx = _db.transaction(storeName, 'readonly');
     const req = tx.objectStore(storeName).get(key);
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = (e)=> reject(e);
-  });
+  }));
 }
 function idbGetAll(storeName){
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(storeName, 'readonly');
+  return ensureDB().then(_db=> new Promise((resolve, reject)=>{
+    const tx = _db.transaction(storeName, 'readonly');
     const req = tx.objectStore(storeName).getAll();
     req.onsuccess = ()=> resolve(req.result);
     req.onerror = (e)=> reject(e);
-  });
+  }));
 }
 function idbDelete(storeName, key){
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(storeName, 'readwrite');
+  return ensureDB().then(_db=> new Promise((resolve, reject)=>{
+    const tx = _db.transaction(storeName, 'readwrite');
     tx.objectStore(storeName).delete(key);
     tx.oncomplete = ()=> resolve();
     tx.onerror = (e)=> reject(e);
-  });
+  }));
 }
 
 // ---------- 批次Key版本化 ----------

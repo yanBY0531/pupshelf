@@ -1622,9 +1622,10 @@
     100%{ opacity:1; transform: translateY(0); }
   }
   /* 抬头：Once：钢笔手写体，像信的称呼，靠左、比正文左缘再探出一点 */
-  /* 字体跟随页面下方英文签名（The past is never dead.）同一套钢笔手写栈，只是字号放大 */
+  /* 字体跟随页面下方英文签名（The past is never dead.）同一套钢笔手写栈，只要字号放大，
+     英文手写体（Snell Roundhand 等）排最前，霞鹜文楷只当中文兜底，避免抢英文渲染 */
   .reunion-greeting{
-    font-family: 'LXGW WenKai','霞鹜文楷','Snell Roundhand','Apple Chancery','Segoe Script','Bradley Hand','Brush Script MT',cursive;
+    font-family: 'Snell Roundhand','Apple Chancery','Segoe Script','Bradley Hand','Brush Script MT','LXGW WenKai','霞鹜文楷',cursive;
     font-style: italic;
     font-size: 21px; letter-spacing: 1.2px;
     color: var(--ink-soft);
@@ -1726,7 +1727,7 @@
   }
   .reunion-sig-line:nth-child(3){ transform: rotate(1.2deg); }
   .reunion-sig-text{
-    font-family: 'LXGW WenKai','霞鹜文楷','Snell Roundhand','Apple Chancery','Segoe Script','Bradley Hand','Brush Script MT',cursive;
+    font-family: 'Snell Roundhand','Apple Chancery','Segoe Script','Bradley Hand','Brush Script MT','LXGW WenKai','霞鹜文楷',cursive;
     font-style: italic;
     font-size: 14.5px; letter-spacing: 1px;
     color: var(--ink-soft);
